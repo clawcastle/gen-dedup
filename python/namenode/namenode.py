@@ -48,6 +48,5 @@ def get_metadata(filename):
         raise Exception('File not found')
 
     file_metadata = dict(data)
-    print(f"meta: {file_metadata}", flush=True)
 
     return file_metadata['size'], file_metadata['content_type'], json.loads(file_metadata['storage_blocks'])

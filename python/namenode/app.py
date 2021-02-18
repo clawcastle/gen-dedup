@@ -59,17 +59,12 @@ def create_blocks_and_hashes(file_data):
 
 @app.route("/file/<filename>", methods=["GET"])
 def get_file(filename):
-    print("halloooo")
-
     try:
         size, content_type, blocks = get_metadata(filename)
     except:
         return make_response("File does not exist", 404)
 
-    print(f"blocks: {blocks}")
     k = list(blocks.keys())[0]
-    print(f"k: {k}")
-
 
     content = cache.get_from_cache(k)
     if content is not None:
