@@ -1,17 +1,17 @@
 version: "3.7"
 services:
   namenode:
-    build: .
+    build: ./namenode
     container_name: dedup
     environment:
       - NODE_ID=1
     volumes:
-      - ./data/2:/files/2
+      - ./data/1:/files/1
       - ./db:/db
     ports:
       - 3000:3000
   # storage_node_1:
-  #   build: .
+  #   build: ./storage_node
   #   container_name: storage_node_1
   #   environment:
   #     - NODE_ID=2

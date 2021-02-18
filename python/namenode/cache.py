@@ -2,13 +2,14 @@ class Cache:
     cache = {}
 
     def add_to_cache(self, key, value):
-        if self.is_in_cache(key):
+        if not self.is_in_cache(key):
             self.cache[key] = value
 
     def is_in_cache(self, key):
         return key in self.cache
 
     def get_from_cache(self, key):
+        print(list(self.cache.keys()))
         if self.is_in_cache(key):
             return self.cache[key]
         else:
