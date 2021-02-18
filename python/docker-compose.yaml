@@ -1,0 +1,9 @@
+version: "3.7"
+services:
+  flask:
+    build: ./
+    container_name: dedup
+    volumes:
+    - ./data:/files
+    ports:
+    - 3000:3000
