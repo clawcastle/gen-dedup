@@ -1,6 +1,12 @@
 from flask import Flask, request, make_response
+import os
+from random import randint
 
 app = Flask(__name__)
+
+node_id = os.environ.get("NODE_ID") if os.environ.get("NODE_ID") is not None else str(randint(0, 1000))
+port = int(os.environ.get("PORT_NO")) if os.environ.get("PORT_NO") is not None else randint(3001, 10000)
+
 
 @app.route("/block", methods=["POST"])
 def add_block():
@@ -25,7 +31,7 @@ def add_block():
 
     return "", 200
 
-@app.route("/file/<blockname>", methods=["GET"])
+@app.route("/block/<blockname>", methods=["GET"])
 def get_block(blockname):
     try:
         with open(f"./files/{blockname}.bin", "rb") as f:
@@ -35,4 +41,5 @@ def get_block(blockname):
 
     return block
 
-app.run(host="0.0.0.0", port=3001)
+print(f"port {port}")
+app.run(host="0.0.0.0", port=port)

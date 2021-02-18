@@ -2,20 +2,22 @@ version: "3.7"
 services:
   namenode:
     build: ./namenode
-    container_name: dedup
+    container_name: namenode
     environment:
-      - NODE_ID=1
+      - NODE_ID=namenode
+      - PORT_NO=3000
     volumes:
-      - ./data/1:/files/1
-      - ./db:/db
+      - ./data/0:/app/files/0
+      - ./db:/app/db
     ports:
       - 3000:3000
-  # storage_node_1:
-  #   build: ./storage_node
-  #   container_name: storage_node_1
-  #   environment:
-  #     - NODE_ID=2
-  #   volumes:
-  #     - ./data/2:/files/2
-  #   ports:
-  #     - 3001:3001
+  storagenode_1:
+    build: ./storagenode
+    container_name: storagenode_1
+    environment:
+      - NODE_ID=storagenode_1
+      - PORT_NO=3001
+    volumes:
+      - ./data/1:/app/files/1
+    ports:
+      - 3001:3001
