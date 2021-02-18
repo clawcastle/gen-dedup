@@ -1,9 +1,21 @@
 version: "3.7"
 services:
-  flask:
-    build: ./
+  namenode:
+    build: .
     container_name: dedup
+    environment:
+      - NODE_ID=1
     volumes:
-    - ./data:/files
+      - ./data/2:/files/2
+      - ./db:/db
     ports:
-    - 3000:3000
+      - 3000:3000
+  # storage_node_1:
+  #   build: .
+  #   container_name: storage_node_1
+  #   environment:
+  #     - NODE_ID=2
+  #   volumes:
+  #     - ./data/2:/files/2
+  #   ports:
+  #     - 3001:3001
