@@ -1,14 +1,16 @@
 from flask import Flask, request, make_response
 import os
 import sys
+import hashlib
+from cache import Cache
+from namenode.namenode import *
 
 app = Flask(__name__)
+cache = Cache()
 
-cache = {}
 
 @app.route("/file", methods=["POST"])
 def add_file():
-    payload = request.form
     files = request.files
     print(files)
     if not files or not files.get("file"):
@@ -16,6 +18,11 @@ def add_file():
 
     file = files.get("file")
     file_data = bytearray(file.read())
+    file_length = len(file_data)
+    content_type = file.mimetype
+    block_dic = create_blocks_and_hashes(file_data)
+
+    save_metadata(file.filename, file_length, content_type, block_dic)
 
     try:
         with open(f"./files/{file.filename}.bin", "wb") as f:
@@ -28,11 +35,19 @@ def add_file():
     return "", 200
 
 
+def create_blocks_and_hashes(file_data):
+    md5_hash = hashlib.md5(file_data)
+    block_id = str(md5_hash.digest())
+
+    return {block_id: {'order': 0, 'node_id': 'xxx'}}
+
+
 @app.route("/file/<filename>", methods=["GET"])
 def get_file(filename):
-    if filename in cache:
+    content = cache.get_from_cache(filename)
+    if content is not None:
         print("hit cache")
-        return cache[filename]
+        return content
 
     try:
         with open(f"./files/{filename}.bin", "rb") as f:
@@ -40,9 +55,9 @@ def get_file(filename):
     except FileNotFoundError:
         return make_response("File does not exist", 404)
 
-    if filename not in cache:
+    if not cache.is_in_cache(filename):
         print("not in cache")
-        cache[filename] = file
+        cache.add_to_cache(filename, file)
 
     return file
 
