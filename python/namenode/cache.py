@@ -9,7 +9,6 @@ class Cache:
         return key in self.cache
 
     def get_from_cache(self, key):
-        print(list(self.cache.keys()))
         if self.is_in_cache(key):
             return self.cache[key]
         else:

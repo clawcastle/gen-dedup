@@ -14,7 +14,7 @@ def add_block():
     block = files.get("block")
     block_data = bytearray(block.read())
     block_name = request.form.get("block_name")
-    print(f"block: {block_name}, {request.form}")
+    print(f"block: {block_name}, {request.form}", flush=True)
 
     if not files or not files.get("block"):
         return make_response("File not found", 400)
@@ -22,10 +22,10 @@ def add_block():
     block = files.get("block")
 
     try:
-        with open(f"./files/{block_name}.bin", "wb") as f:
+        with open(f"./data/{block_name}.bin", "wb") as f:
             f.write(block_data)
     except EnvironmentError as e:
-        print(f"Error writing file: {block_name}")
+        print(f"Error writing file: {block_name}", flush=True)
         print(e)
         return make_response("Error saving file", 500)
 
@@ -34,7 +34,7 @@ def add_block():
 @app.route("/block/<blockname>", methods=["GET"])
 def get_block(blockname):
     try:
-        with open(f"./files/{blockname}.bin", "rb") as f:
+        with open(f"./data/{blockname}.bin", "rb") as f:
             block = f.read()
     except FileNotFoundError:
         return make_response("File does not exist", 404)

@@ -9,6 +9,8 @@ from namenode import *
 import requests
 from database import Database
 
+BLOCK_SIZE = 10000
+
 app = Flask(__name__)
 cache = Cache()
 
@@ -19,7 +21,6 @@ port = int(os.environ.get("PORT_NO")) if os.environ.get("PORT_NO") is not None e
 @app.route("/file", methods=["POST"])
 def add_file():
     files = request.files
-    print(files)
     if not files or not files.get("file"):
         return make_response("File not found", 400)
 
@@ -29,10 +30,18 @@ def add_file():
     content_type = file.mimetype
     existing, missing = create_blocks_and_hashes(file_data)
 
-    for block_id, block_meta in missing.items():
+    block_node_assocations = {}
+
+    for _, block_meta in missing.items():
+        block_id = block_meta["block_id"]
         requests.post("http://storagenode_1:3001/block", files=dict(block=file_data), data=dict(block_name=block_id))
-        block_meta["node_id"] = "storagenode_1"
-        save_block_node_association(block_id, "storagenode_1")
+
+        if not block_id in block_node_assocations:
+            block_node_assocations[block_id] = "storagenode_1"
+            save_block_node_association(block_id, "storagenode_1")
+
+
+        block_meta["node_id"] = block_node_assocations[block_id]
 
     block_dic = existing | missing
 
@@ -43,16 +52,18 @@ def add_file():
 def create_blocks_and_hashes(file_data):
     existing, missing = {}, {}
 
-    md5_hash = hashlib.md5(file_data)
-    block_id = md5_hash.digest().hex()
+    chunks = [file_data[i:i+BLOCK_SIZE] for i in range(0, len(file_data), BLOCK_SIZE)]
 
-    node_id = get_block_storage_node(block_id)
+    for count, chunk in enumerate(chunks):
+        md5_hash = hashlib.md5(chunk)
+        block_id = md5_hash.digest().hex()
 
-    if not node_id:
-        missing[block_id] = {'order': 0, 'node_id': node_id}
-    else:
-        existing[block_id] = {'order': 0, 'node_id': node_id}
+        node_id = get_block_storage_node(block_id)
 
+        if not node_id:
+            missing[count] = {'block_id': block_id, 'node_id': node_id}
+        else:
+            existing[count] = {'block_id': block_id, 'node_id': node_id}
 
     return existing, missing
 
@@ -64,26 +75,24 @@ def get_file(filename):
     except:
         return make_response("File does not exist", 404)
 
-    k = list(blocks.keys())[0]
-
-    content = cache.get_from_cache(k)
-    if content is not None:
-        print("hit cache")
-        return content
-
     file_blocks = [None] * len(blocks.keys())
 
-    for key, val in blocks.items():
-        req = requests.get(f"http://storagenode_1:3001/block/{key}")
-        block_val = req.content
-        file_blocks[int(val["order"])] = block_val
+    for order, block_meta in blocks.items():
+        block_id = block_meta["block_id"]
+
+        cache_val = cache.get_from_cache(block_id)
+        if cache_val is not None:
+            print("hit cache", flush=True)
+            file_blocks[int(order)] = cache_val
+        else:
+            print("not in cache", flush=True)
+            req = requests.get(f"http://storagenode_1:3001/block/{block_id}")
+            block_val = req.content
+            cache.add_to_cache(block_id, block_val)
+
+            file_blocks[int(order)] = block_val
 
     file = b"".join(file_blocks)
-
-    if not cache.is_in_cache(k):
-        print("not in cache")
-        print(f"k: {k}")
-        cache.add_to_cache(k, file)
 
     return send_file(io.BytesIO(file), mimetype=content_type, as_attachment=True, attachment_filename=filename)
 
