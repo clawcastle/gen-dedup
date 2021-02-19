@@ -8,10 +8,12 @@ from cache import Cache
 from namenode import *
 import requests
 from database import Database
+from nodes import Nodes
 
 BLOCK_SIZE = 10000
 
 app = Flask(__name__)
+nodes = Nodes()
 cache = Cache()
 
 node_id = os.environ.get("NODE_ID") if os.environ.get("NODE_ID") is not None else str(randint(0, 1000))
@@ -34,11 +36,12 @@ def add_file():
 
     for _, block_meta in missing.items():
         block_id = block_meta["block_id"]
-        requests.post("http://storagenode_1:3001/block", files=dict(block=file_data), data=dict(block_name=block_id))
+        node_id = nodes.get_next_storage_node()
+        requests.post(f"http://{node_id}/block", files=dict(block=file_data), data=dict(block_name=block_id))
 
         if not block_id in block_node_assocations:
-            block_node_assocations[block_id] = "storagenode_1"
-            save_block_node_association(block_id, "storagenode_1")
+            block_node_assocations[block_id] = node_id
+            save_block_node_association(block_id, node_id)
 
 
         block_meta["node_id"] = block_node_assocations[block_id]
@@ -79,6 +82,7 @@ def get_file(filename):
 
     for order, block_meta in blocks.items():
         block_id = block_meta["block_id"]
+        node_id = block_meta["node_id"]
 
         cache_val = cache.get_from_cache(block_id)
         if cache_val is not None:
@@ -86,7 +90,7 @@ def get_file(filename):
             file_blocks[int(order)] = cache_val
         else:
             print("not in cache", flush=True)
-            req = requests.get(f"http://storagenode_1:3001/block/{block_id}")
+            req = requests.get(f"http://{node_id}/block/{block_id}")
             block_val = req.content
             cache.add_to_cache(block_id, block_val)
 

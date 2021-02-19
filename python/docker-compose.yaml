@@ -21,3 +21,23 @@ services:
       - ./data/storagenode_1:/app/data
     ports:
       - 3001:3001
+  storagenode_2:
+    build: ./storagenode
+    container_name: storagenode_2
+    environment:
+      - NODE_ID=storagenode_2
+      - PORT_NO=3002
+    volumes:
+      - ./data/storagenode_2:/app/data
+    ports:
+      - 3002:3002
+  storagenode_3:
+    build: ./storagenode
+    container_name: storagenode_3
+    environment:
+      - NODE_ID=storagenode_3
+      - PORT_NO=3003
+    volumes:
+      - ./data/storagenode_3:/app/data
+    ports:
+      - 3003:3003
