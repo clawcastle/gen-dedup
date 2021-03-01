@@ -10,7 +10,7 @@ import requests
 from database import Database
 from nodes import Nodes
 
-BLOCK_SIZE = 10000
+BLOCK_SIZE = 1024
 
 app = Flask(__name__)
 nodes = Nodes()
@@ -18,6 +18,19 @@ cache = Cache()
 
 node_id = os.environ.get("NODE_ID") if os.environ.get("NODE_ID") is not None else str(randint(0, 1000))
 port = int(os.environ.get("PORT_NO")) if os.environ.get("PORT_NO") is not None else 3000
+
+
+@app.route("file_data", methods=["POST"])
+def add_file_data():
+    files = request.files
+    file = files.get("file")
+    file_data = bytearray(file.read())
+    file_length = len(file_data)
+    file_name = request.form.get("file_name")
+    content_type = ".bin"
+
+    save_file_data_and_metadata(file_data, file_name, file_length, content_type)
+    return "", 200
 
 
 @app.route("/file", methods=["POST"])
@@ -30,8 +43,14 @@ def add_file():
     file_data = bytearray(file.read())
     file_length = len(file_data)
     content_type = file.mimetype
-    existing, missing = create_blocks_and_hashes(file_data)
+    save_file_data_and_metadata(file_data, file.filename, file_length, content_type)
+    return "", 200
 
+
+def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
+    existing, missing = create_blocks_and_hashes(file_data)
+    print(len(existing))
+    
     block_node_assocations = {}
 
     for _, block_meta in missing.items():
@@ -49,8 +68,6 @@ def add_file():
     block_dic = existing | missing
 
     save_metadata(file.filename, file_length, content_type, block_dic)
-    return "", 200
-
 
 def create_blocks_and_hashes(file_data):
     existing, missing = {}, {}
