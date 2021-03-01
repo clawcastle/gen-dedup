@@ -4,7 +4,8 @@ CREATE TABLE `file` (
    `size` INTEGER,
    `content_type` TEXT,
    `storage_blocks` TEXT,
-   `created` DATETIME DEFAULT CURRENT_TIMESTAMP
+   `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
+   `strategy` TEXT
 );
 
 CREATE TABLE `blocks` (

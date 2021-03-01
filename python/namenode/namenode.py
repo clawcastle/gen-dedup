@@ -27,12 +27,12 @@ def save_block_node_association(block_id, node_id):
     )
     db.commit()
 
-def save_metadata(filename, size, content_type, blocks):
+def save_metadata(filename, size, content_type, blocks, strategy):
     # Insert the File record in the DB
     db = database.get_db()
     cursor = db.execute(
-        "INSERT INTO `file`(`filename`, `size`, `content_type`, `storage_blocks`) VALUES (?,?,?,?)",
-        (filename, size, content_type, json.dumps(blocks))
+        "INSERT INTO `file`(`filename`, `size`, `content_type`, `storage_blocks`, `strategy`) VALUES (?,?,?,?,?)",
+        (filename, size, content_type, json.dumps(blocks), strategy)
     )
     db.commit()
 
@@ -49,4 +49,4 @@ def get_metadata(filename):
 
     file_metadata = dict(data)
 
-    return file_metadata['size'], file_metadata['content_type'], json.loads(file_metadata['storage_blocks'])
+    return file_metadata['size'], file_metadata['content_type'], json.loads(file_metadata['storage_blocks']), file_metadata['strategy']

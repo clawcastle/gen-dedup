@@ -6,6 +6,7 @@ services:
     environment:
       - NODE_ID=namenode
       - PORT_NO=3000
+      - STRATEGY=DEDUP # FULL_FILE | CODED | DEDUP | GEN_DEDUP
     volumes:
       - ./data/namenode:/app/data
       - ./db:/app/db
