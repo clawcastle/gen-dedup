@@ -4,7 +4,7 @@ import requests
 FILE_SIZE = 10240
 CHUNK_SIZE = 1024
 BASE_SIZE = 992
-ZEROS_SIZE = 960
+ZEROS_SIZE = 990
 ZEROS = bytearray(ZEROS_SIZE)
 
 

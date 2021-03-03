@@ -10,6 +10,7 @@ import requests
 from database import Database
 from nodes import Nodes
 import dedup as dedup
+import gen_dedup as gen_dedup
 
 BLOCK_SIZE = 1024
 
@@ -20,6 +21,8 @@ cache = Cache()
 node_id = os.environ.get("NODE_ID") if os.environ.get("NODE_ID") is not None else str(randint(0, 1000))
 port = int(os.environ.get("PORT_NO")) if os.environ.get("PORT_NO") is not None else 3000
 strategy = os.environ.get("STRATEGY") if os.environ.get("STRATEGY") is not None else "FULL_FILE"
+
+print(f"Strategy: {strategy}.")
 
 @app.route("/file_data", methods=["POST"])
 def add_file_data():
@@ -56,7 +59,7 @@ def save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     elif strategy == "DEDUP":
         dedup.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     elif strategy == "GEN_DEDUP":
-        pass
+        gen_dedup.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
 
 @app.route("/file/<filename>", methods=["GET"])
 def get_file(filename):
@@ -72,7 +75,7 @@ def get_file(filename):
     elif strategy == "DEDUP":
         file_data = dedup.get_file(filename, size, blocks)
     elif strategy == "GEN_DEDUP":
-        pass
+        file_data = gen_dedup.get_file(filename, size, blocks)
 
     return send_file(file_data, mimetype=content_type, as_attachment=True, attachment_filename=filename)
 

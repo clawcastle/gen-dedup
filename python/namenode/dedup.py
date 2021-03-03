@@ -11,15 +11,16 @@ cache = Cache()
 BLOCK_SIZE = 1024
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
-    existing, missing = create_blocks_and_hashes(file_data)
+    existing, missing, new_blocks = create_blocks_and_hashes(file_data)
     print(len(existing))
     
     block_node_assocations = {}
 
     for _, block_meta in missing.items():
         block_id = block_meta["block_id"]
+        chunk = new_blocks[block_id]
         node_id = nodes.get_next_storage_node()
-        requests.post(f"http://{node_id}/block", files=dict(block=file_data), data=dict(block_name=block_id))
+        requests.post(f"http://{node_id}/block", files=dict(block=chunk), data=dict(block_name=block_id))
 
         if not block_id in block_node_assocations:
             block_node_assocations[block_id] = node_id
@@ -33,7 +34,7 @@ def save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     save_metadata(file_name, file_length, content_type, block_dic, "DEDUP")
 
 def create_blocks_and_hashes(file_data):
-    existing, missing = {}, {}
+    existing, missing, new_blocks = {}, {}, {}
 
     chunks = [file_data[i:i+BLOCK_SIZE] for i in range(0, len(file_data), BLOCK_SIZE)]
 
@@ -45,10 +46,11 @@ def create_blocks_and_hashes(file_data):
 
         if not node_id:
             missing[count] = {'block_id': block_id, 'node_id': node_id}
+            new_blocks[block_id] = chunk
         else:
             existing[count] = {'block_id': block_id, 'node_id': node_id}
 
-    return existing, missing
+    return existing, missing, new_blocks
 
 
 def get_file(filename, size, blocks):

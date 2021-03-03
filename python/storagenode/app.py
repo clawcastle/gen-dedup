@@ -14,7 +14,6 @@ def add_block():
     block = files.get("block")
     block_data = bytearray(block.read())
     block_name = request.form.get("block_name")
-    print(f"block: {block_name}, {request.form}", flush=True)
 
     if not files or not files.get("block"):
         return make_response("File not found", 400)
@@ -41,5 +40,4 @@ def get_block(blockname):
 
     return block
 
-print(f"port {port}")
 app.run(host="0.0.0.0", port=port)
