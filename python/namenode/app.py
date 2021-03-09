@@ -4,7 +4,6 @@ import sys
 import io
 from random import randint
 import hashlib
-from cache import Cache
 from namenode import *
 import requests
 from database import Database
@@ -16,7 +15,6 @@ BLOCK_SIZE = 1024
 
 app = Flask(__name__)
 nodes = Nodes()
-cache = Cache()
 
 node_id = os.environ.get("NODE_ID") if os.environ.get("NODE_ID") is not None else str(randint(0, 1000))
 port = int(os.environ.get("PORT_NO")) if os.environ.get("PORT_NO") is not None else 3000

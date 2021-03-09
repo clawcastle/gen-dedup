@@ -38,9 +38,6 @@ def create_block_hash_and_deviation(block):
     base = block[:BASE_SIZE]
     deviation = block[BASE_SIZE:]
 
-    print(f"base len: {len(base)}")
-    print(f"dev len: {len(deviation)}")
-
     md5_hash = hashlib.md5(base)
     base_id = md5_hash.digest().hex()
 
@@ -80,13 +77,11 @@ def get_file(filename, size, blocks):
         if cache_val is not None:
             print("hit cache", flush=True)
             file_blocks[int(order)] = cache_val + deviation
-            print(f"len: {len(cache_val)}, {len(deviation)}")
         else:
             print("not in cache", flush=True)
             req = requests.get(f"http://{node_id}/block/{base_id}")
             block_val = req.content
             cache.add_to_cache(base_id, block_val)
-            print(f"len: {len(block_val)}, {len(deviation)}")
 
             file_blocks[int(order)] = block_val + deviation
 
