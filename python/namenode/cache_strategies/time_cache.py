@@ -15,7 +15,8 @@ class TimeCache:
 
     def get_from_cache(self, key):
         if self.is_in_cache(key):
-            return self.cache[key][0]
+            print(len(self.cache))
+            return self.cache[key]
         else:
             return None
 

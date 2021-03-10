@@ -8,7 +8,7 @@ class LFUCache:
 
     def add_to_cache(self, key, value):
         if not self.is_in_cache(key):
-            if len(cache) >= self.CACHE_SIZE:
+            if len(self.cache) >= self.CACHE_SIZE:
                 removed_item = self.frequencies.pop()
                 self.cache.pop(removed_item["key"])
         
@@ -19,12 +19,13 @@ class LFUCache:
         return key in self.cache
 
     def get_from_cache(self, key):
+        print(len(self.cache))
         if self.is_in_cache(key):
             element_index = 0
             element_frequency = 0
 
             # Updating the frequency of the element requested
-            for i, elem in enumerate(frequencies):
+            for i, elem in enumerate(self.frequencies):
                 if elem["key"] == key: 
                     elem["freq"] = elem["freq"] + 1
                     element_frequency = elem["freq"]
@@ -33,9 +34,9 @@ class LFUCache:
             
             # Sorting the list of frequencies
             for i in range(element_index - 1, 0, -1):
-                if element_frequency <= frequencies[i]["freq"]:
-                    del frequencies[element_index]
-                    frequencies.insert(i, {"key": key, "freq": element_frequency})
+                if element_frequency <= self.frequencies[i]["freq"]:
+                    del self.frequencies[element_index]
+                    self.frequencies.insert(i, {"key": key, "freq": element_frequency})
                     break                  
 
             return self.cache[key]
