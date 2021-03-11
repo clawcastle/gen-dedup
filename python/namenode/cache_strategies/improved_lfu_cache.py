@@ -1,16 +1,17 @@
 from collections import deque
 import os
 
-class LFUCache:
+class ImprovedLFUCache:
     cache = {}
     frequencies = deque()
     CACHE_SIZE = int(os.environ.get("CACHE_SIZE"))
+    threshold = CACHE_SIZE - CACHE_SIZE // 5
 
     def add_to_cache(self, key, value):
         if not self.is_in_cache(key):
             if len(self.cache) >= self.CACHE_SIZE:
-                removed_item = self.frequencies.pop()
-                self.cache.pop(removed_item["key"])
+                self.cache.pop(self.frequencies[self.threshold]["key"])
+                del self.frequencies[self.threshold]
         
             self.cache[key] = value
             self.frequencies.append({"key": key, "freq": 1})

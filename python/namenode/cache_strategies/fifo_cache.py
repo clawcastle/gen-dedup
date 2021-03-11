@@ -9,10 +9,8 @@ class FifoCache:
 
     def add_to_cache(self, key, value):
         if not self.is_in_cache(key):
-            print(f"len: {len(self.cache)}")
             if len(self.cache) >= self.CACHE_SIZE:
                 self.cache.popitem()
-                print("Popped item from cache", flush=True)
             self.cache[key] = value
 
 

@@ -8,7 +8,7 @@ from cache import Cache
 nodes = Nodes()
 cache = Cache()
 
-BLOCK_SIZE = 1024
+BLOCK_SIZE = 11
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
     existing, missing, new_blocks = create_blocks_and_hashes(file_data)
@@ -60,12 +60,10 @@ def get_file(filename, size, blocks):
         block_id = block_meta["block_id"]
         node_id = block_meta["node_id"]
 
-        cache_val = cache.get_from_cache(block_id)
+        cache_val = cache.get_from_cache(block_id, filename)
         if cache_val is not None:
-            print("hit cache", flush=True)
             file_blocks[int(order)] = cache_val
         else:
-            print("not in cache", flush=True)
             req = requests.get(f"http://{node_id}/block/{block_id}")
             block_val = req.content
             cache.add_to_cache(block_id, block_val)

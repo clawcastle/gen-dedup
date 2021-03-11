@@ -7,8 +7,9 @@ services:
       - NODE_ID=namenode
       - PORT_NO=3000
       - STRATEGY=GEN_DEDUP # FULL_FILE | CODED | DEDUP | GEN_DEDUP
-      - CACHE_STRATEGY=LFU # SIMPLE | FIFO | TIME | LFU
-      - CACHE_SIZE=100
+      - CACHE_STRATEGY=IMPROVED_LFU # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU
+      - CACHE_SIZE=25
+      - MEASUREMENT_MODE=1
     volumes:
       - ./data/namenode:/app/data
       - ./db:/app/db

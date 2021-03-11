@@ -8,8 +8,8 @@ from cache import Cache
 nodes = Nodes()
 cache = Cache()
 
-BLOCK_SIZE = 1024
-BASE_SIZE = 992
+BLOCK_SIZE = 11
+BASE_SIZE = 10
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
     existing, missing, new_blocks = create_blocks_and_hashes(file_data)
@@ -73,12 +73,10 @@ def get_file(filename, size, blocks):
         deviation_hex = block_meta["deviation"]
         deviation = bytearray.fromhex(deviation_hex)
 
-        cache_val = cache.get_from_cache(base_id)
+        cache_val = cache.get_from_cache(base_id, filename)
         if cache_val is not None:
-            print("hit cache", flush=True)
             file_blocks[int(order)] = cache_val + deviation
         else:
-            print("not in cache", flush=True)
             req = requests.get(f"http://{node_id}/block/{base_id}")
             block_val = req.content
             cache.add_to_cache(base_id, block_val)
