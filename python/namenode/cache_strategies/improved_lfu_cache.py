@@ -33,8 +33,8 @@ class ImprovedLFUCache:
                     break
             
             # Sorting the list of frequencies
-            for i in range(element_index - 1, 0, -1):
-                if element_frequency <= self.frequencies[i]["freq"]:
+            for i in range(element_index - 1, -1, -1):
+                if element_frequency <= self.frequencies[i]["freq"] or i == -1:
                     del self.frequencies[element_index]
                     self.frequencies.insert(i, {"key": key, "freq": element_frequency})
                     break                  
