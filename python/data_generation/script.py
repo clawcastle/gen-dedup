@@ -16,11 +16,11 @@ ZEROS = bytearray(ZEROS_SIZE)
 
 N_FILES = 500
 MEAN = 250
-SIGMA = 10
-N_REQUESTS = 1000
+SIGMA = 60
+N_REQUESTS = 2000
 
 def generate_chunk():
-    values = np.random.normal(128, 5, size=CHUNK_SIZE-ZEROS_SIZE)
+    values = np.random.normal(128, 15, size=CHUNK_SIZE-ZEROS_SIZE)
     as_bytes = values.astype(np.uint8).tobytes()
 
     chunk = ZEROS + as_bytes

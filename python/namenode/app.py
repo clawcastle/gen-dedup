@@ -10,6 +10,7 @@ from database import Database
 from nodes import Nodes
 import dedup as dedup
 import gen_dedup as gen_dedup
+from measurement_session import get_settings, put_setting, clear_session
 
 BLOCK_SIZE = 1024
 
@@ -76,6 +77,31 @@ def get_file(filename):
         file_data = gen_dedup.get_file(filename, size, blocks)
 
     return send_file(file_data, mimetype=content_type, as_attachment=True, attachment_filename=filename)
+
+
+@app.route("/measurements/session/start", methods=["POST"])
+def start_measurement_session():
+    put_setting("sd_files", request.form["sd_files"])
+    put_setting("sd_bytes", request.form["sd_bytes"])
+    put_setting("mean_files", request.form["mean_files"])
+    put_setting("mean_bytes", request.form["mean_bytes"])
+    put_setting("scenario", request.form["scenario"])
+    put_setting("n_files", request.form["n_files"])
+    put_setting("n_requests", request.form["n_requests"])
+
+    if strategy == "FULL_FILE":
+        pass
+    elif strategy == "CODED":
+        pass
+    elif strategy == "DEDUP":
+        dedup.new_measurement_session()
+    elif strategy == "GEN_DEDUP":
+        gen_dedup.new_measurement_session()
+
+    return "", 200
+
+
+
 
 
 data_folder = sys.argv[1] if len(sys.argv) > 1 else "./files"

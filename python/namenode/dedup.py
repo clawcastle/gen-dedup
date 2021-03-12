@@ -4,11 +4,12 @@ from nodes import Nodes
 from namenode import *
 import io
 from cache import Cache
+import os
 
 nodes = Nodes()
 cache = Cache()
 
-BLOCK_SIZE = 11
+BLOCK_SIZE = int(os.environ.get("BLOCK_SIZE"))
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
     existing, missing, new_blocks = create_blocks_and_hashes(file_data)
@@ -73,4 +74,5 @@ def get_file(filename, size, blocks):
     file = b"".join(file_blocks)
     return io.BytesIO(file)
 
-    # return send_file(io.BytesIO(file), mimetype=content_type, as_attachment=True, attachment_filename=filename)
+def new_measurement_session():
+    cache.new_measurement_session()

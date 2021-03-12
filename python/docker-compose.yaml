@@ -8,11 +8,14 @@ services:
       - PORT_NO=3000
       - STRATEGY=GEN_DEDUP # FULL_FILE | CODED | DEDUP | GEN_DEDUP
       - CACHE_STRATEGY=IMPROVED_LFU # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU
-      - CACHE_SIZE=25
+      - CACHE_SIZE=50
       - MEASUREMENT_MODE=1
+      - BLOCK_SIZE=11
+      - BASE_SIZE=10
     volumes:
       - ./data/namenode:/app/data
       - ./db:/app/db
+      - ./data_analytics/measurements:/app/measurements
     ports:
       - 3000:3000
   storagenode_1:

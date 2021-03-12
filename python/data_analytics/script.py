@@ -10,13 +10,13 @@ from collections import OrderedDict
 
 types = ["IMPROVED_LFU"] #"LFU", "TIME"]
 means = ["M=250"]
-sds = ["S=100", "S=10"]#"S=120"]
+sds = ["S=60"]#"S=120"]
 
 
 for type in types:
     for mean in means:
         for sd in sds:
-            filename = f'./measurements/Scenario2/CACHESIZE_25_FILES_500/{type}_{mean}_{sd}/{type}_cache_hits.csv'
+            filename = f'./measurements/Scenario3/CACHESIZE_25_FILES_500/{type}_{mean}_{sd}/{type}_cache_hits.csv'
 
             with open(filename) as f:
                 entries = [{k: v for k, v in row.items()}
@@ -39,11 +39,11 @@ for type in types:
             plt.show()
 
             in_cache_values = list(map(lambda x: int(x["inCache"]), entries))
-            window_size = 2000
+            window_size = 20
 
             cache_series = pd.Series(in_cache_values)
             windows = cache_series.rolling(window_size)
-            moving_average = windows.mean().tolist()
+            moving_average = windows.mean().tolist()[:1000]
 
             without_nans = moving_average[window_size - 1:]
 
