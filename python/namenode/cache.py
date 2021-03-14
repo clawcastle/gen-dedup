@@ -49,8 +49,6 @@ class Cache:
         cache_size = int(os.environ.get("CACHE_SIZE"))
         
         settings = get_settings()
-        x = settings["sd_files"]
-        print(f"x = {x}")
         if self.measuring:
             folder_path = f'./measurements/Scenario{settings["scenario"]}/CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}/{self.CACHE_STRATEGY}_SDF={settings["sd_files"]}_SDB={settings["sd_bytes"]}'
             # subfolder_path = f'CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}'
@@ -58,7 +56,7 @@ class Cache:
 
             Path(folder_path).mkdir(parents=True, exist_ok=True)
 
-            self.filename = folder_path + f"/{self.CACHE_STRATEGY}_cache_hits.csv"
+            self.filename = folder_path + f"/cache_hits.csv"
             with open(self.filename, "w") as f:
                 writer = csv.DictWriter(f, fieldnames=self.labels)
                 writer.writeheader()
