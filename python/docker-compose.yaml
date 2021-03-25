@@ -6,10 +6,16 @@ services:
     environment:
       - NODE_ID=namenode
       - PORT_NO=3000
-      - STRATEGY=GEN_DEDUP # FULL_FILE | CODED | DEDUP | GEN_DEDUP
+      - STRATEGY=GEN_DEDUP # FULL_FILE | CODED | DEDUP | GEN_D EDUP
+      - CACHE_STRATEGY=FIFO # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU
+      - CACHE_SIZE=1000
+      - MEASUREMENT_MODE=1
+      - BLOCK_SIZE=11
+      - BASE_SIZE=10
     volumes:
       - ./data/namenode:/app/data
       - ./db:/app/db
+      - ./data_analytics/measurements:/app/measurements
     ports:
       - 3000:3000
   storagenode_1:
