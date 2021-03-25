@@ -1,8 +1,10 @@
 from expiringdict import ExpiringDict
 import os
+from measurement_session import get_settings
 
 class TimeCache:
-    CACHE_SIZE = int(os.environ.get("CACHE_SIZE"))
+    settings = get_settings()
+    CACHE_SIZE = settings["cache_size"]
 
     cache = ExpiringDict(max_len=CACHE_SIZE, max_age_seconds=10)
 
@@ -17,4 +19,9 @@ class TimeCache:
             return self.cache[key]
         else:
             return None
+
+    def clear(self):
+        self.settings = get_settings()
+        self.CACHE_SIZE = self.settings["cache_size"]
+        self.cache = ExpiringDict(max_len=self.CACHE_SIZE, max_age_seconds=10)
 

@@ -34,7 +34,6 @@ def save_file_data_and_metadata(file_data, file_name, file_length, content_type)
             block_node_assocations[base_id] = node_id
             save_block_node_association(base_id, node_id)
 
-
         block_meta["node_id"] = block_node_assocations[base_id]
 
     block_dic = existing | missing
@@ -102,8 +101,8 @@ def get_file(filename, size, blocks):
 
 def new_measurement_session():
     if measuring:
-        cache_size = int(os.environ.get("CACHE_SIZE"))
         settings = get_settings()
+        cache_size = settings["cache_size"]
         folder_path = f'./measurements/Scenario{settings["scenario"]}/CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}/{CACHE_STRATEGY}_SDF={settings["sd_files"]}_SDB={settings["sd_bytes"]}'
         Path(folder_path).mkdir(parents=True, exist_ok=True)
 

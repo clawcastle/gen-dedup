@@ -1,4 +1,9 @@
+from measurement_session import get_settings
+
+
 class SimpleCache: 
+    settings = get_settings()
+    CACHE_SIZE = settings["cache_size"]
 
     cache = {}
 
@@ -14,3 +19,8 @@ class SimpleCache:
             return self.cache[key]
         else:
             return None
+
+    def clear(self):
+        self.settings = get_settings()
+        self.CACHE_SIZE = self.settings["cache_size"]
+        self.cache = {}

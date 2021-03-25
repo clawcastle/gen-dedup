@@ -8,9 +8,13 @@ from namenode import *
 import requests
 from database import Database
 from nodes import Nodes
+from measurement_session import get_settings, put_setting, clear_session
+put_setting("cache_size", int(os.environ.get("CACHE_SIZE")))
+
 import dedup as dedup
 import gen_dedup as gen_dedup
-from measurement_session import get_settings, put_setting, clear_session
+import full_file as full_file
+
 
 BLOCK_SIZE = 1024
 
@@ -52,7 +56,7 @@ def add_file():
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
     if strategy == "FULL_FILE":
-        pass
+        full_file.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     elif strategy == "CODED":
         pass
     elif strategy == "DEDUP":
@@ -68,7 +72,7 @@ def get_file(filename):
         return make_response("File does not exist", 404)
 
     if strategy == "FULL_FILE":
-        pass
+        file_data = full_file.get_file(filename, size, blocks)
     elif strategy == "CODED":
         pass
     elif strategy == "DEDUP":
@@ -88,9 +92,10 @@ def start_measurement_session():
     put_setting("scenario", request.form["scenario"])
     put_setting("n_files", request.form["n_files"])
     put_setting("n_requests", request.form["n_requests"])
+    put_setting("cache_size", int(request.form["cache_size"]))
 
     if strategy == "FULL_FILE":
-        pass
+        full_file.new_measurement_session()
     elif strategy == "CODED":
         pass
     elif strategy == "DEDUP":
@@ -99,9 +104,6 @@ def start_measurement_session():
         gen_dedup.new_measurement_session()
 
     return "", 200
-
-
-
 
 
 data_folder = sys.argv[1] if len(sys.argv) > 1 else "./files"

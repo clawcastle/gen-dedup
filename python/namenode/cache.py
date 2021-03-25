@@ -45,10 +45,10 @@ class Cache:
 
             return cache_hit
 
-    def new_measurement_session(self):
-        cache_size = int(os.environ.get("CACHE_SIZE"))
-        
+    def new_measurement_session(self):        
         settings = get_settings()
+        cache_size = settings["cache_size"]
+        self.cache.clear()
         if self.measuring:
             folder_path = f'./measurements/Scenario{settings["scenario"]}/CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}/{self.CACHE_STRATEGY}_SDF={settings["sd_files"]}_SDB={settings["sd_bytes"]}'
             # subfolder_path = f'CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}'

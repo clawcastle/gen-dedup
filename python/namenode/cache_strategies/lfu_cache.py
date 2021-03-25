@@ -1,10 +1,12 @@
 from collections import deque
 import os
+from measurement_session import get_settings
 
 class LFUCache:
     cache = {}
     frequencies = deque()
-    CACHE_SIZE = int(os.environ.get("CACHE_SIZE"))
+    settings = get_settings()
+    CACHE_SIZE = settings["cache_size"]
 
     def add_to_cache(self, key, value):
         if not self.is_in_cache(key):
@@ -15,6 +17,11 @@ class LFUCache:
             self.cache[key] = value
             self.frequencies.append({"key": key, "freq": 1})
     
+    def clear(self):
+        self.settings = get_settings()
+        self.CACHE_SIZE = self.settings["cache_size"]
+        self.cache = {}
+
     def is_in_cache(self, key):
         return key in self.cache
 

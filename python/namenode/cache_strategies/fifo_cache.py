@@ -1,10 +1,11 @@
 import queue
 from collections import OrderedDict
 import os
+from measurement_session import get_settings
 
 class FifoCache:
-    CACHE_SIZE = int(os.environ.get("CACHE_SIZE"))
-    print(f"size: {CACHE_SIZE}")
+    settings = get_settings()
+    CACHE_SIZE = settings["cache_size"]
     cache = OrderedDict()
 
     def add_to_cache(self, key, value):
@@ -22,3 +23,9 @@ class FifoCache:
             return self.cache[key]
         else:
             return None
+    
+    def clear(self):
+        self.settings = get_settings()
+        self.CACHE_SIZE = self.settings["cache_size"]
+        self.cache = OrderedDict()
+    

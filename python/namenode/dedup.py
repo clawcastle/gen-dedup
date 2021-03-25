@@ -5,11 +5,17 @@ from namenode import *
 import io
 from cache import Cache
 import os
+from measurement_session import get_settings
+from pathlib import Path
+import csv
 
 nodes = Nodes()
 cache = Cache()
 
 BLOCK_SIZE = int(os.environ.get("BLOCK_SIZE"))
+measuring = bool(os.environ.get("MEASUREMENT_MODE"))
+CACHE_STRATEGY = os.environ.get("CACHE_STRATEGY")
+labels = ["filename", "n_blocks", "cache_hits"]
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
     existing, missing, new_blocks = create_blocks_and_hashes(file_data)
@@ -26,7 +32,6 @@ def save_file_data_and_metadata(file_data, file_name, file_length, content_type)
         if not block_id in block_node_assocations:
             block_node_assocations[block_id] = node_id
             save_block_node_association(block_id, node_id)
-
 
         block_meta["node_id"] = block_node_assocations[block_id]
 
@@ -56,7 +61,7 @@ def create_blocks_and_hashes(file_data):
 
 def get_file(filename, size, blocks):
     file_blocks = [None] * len(blocks.keys())
-
+    hits = 0
     for order, block_meta in blocks.items():
         block_id = block_meta["block_id"]
         node_id = block_meta["node_id"]
@@ -71,8 +76,25 @@ def get_file(filename, size, blocks):
 
             file_blocks[int(order)] = block_val
 
+    if measuring:
+        with open(csvfile, "a") as f:
+            writer = csv.DictWriter(f, fieldnames=labels)
+            writer.writerow({"filename": filename, "n_blocks": len(file_blocks), "cache_hits": hits})
+
     file = b"".join(file_blocks)
     return io.BytesIO(file)
 
 def new_measurement_session():
-    cache.new_measurement_session()
+    if measuring:
+        settings = get_settings()
+        cache_size = settings["cache_size"]
+        folder_path = f'./measurements/Scenario{settings["scenario"]}/CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}/{CACHE_STRATEGY}_SDF={settings["sd_files"]}_SDB={settings["sd_bytes"]}'
+        Path(folder_path).mkdir(parents=True, exist_ok=True)
+
+        global csvfile
+        csvfile = folder_path + f"/get_file_request.csv"
+        with open(csvfile, "w") as f:
+            writer = csv.DictWriter(f, fieldnames=labels)
+            writer.writeheader()
+
+        cache.new_measurement_session()
