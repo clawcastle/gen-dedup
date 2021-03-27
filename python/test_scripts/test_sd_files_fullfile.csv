@@ -1,0 +1,7 @@
+file_size, chunk_size, base_size, zeros_size, block_size, n_files, mean_files, mean_bytes, sd_files, sd_bytes, n_requests, cache_size, scenario
+110, 11, 10, 8, 11, 1000, 250, 128, 25, 30, 1000, 80, FULL_FILE
+110, 11, 10, 8, 11, 1000, 250, 128, 50, 30, 1000, 80, FULL_FILE
+110, 11, 10, 8, 11, 1000, 250, 128, 100, 30, 1000, 80, FULL_FILE
+110, 11, 10, 8, 11, 1000, 250, 128, 150, 30, 1000, 80, FULL_FILE
+110, 11, 10, 8, 11, 1000, 250, 128, 200, 30, 1000, 80, FULL_FILE
+110, 11, 10, 8, 11, 1000, 250, 128, 250, 30, 1000, 80, FULL_FILE

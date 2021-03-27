@@ -7,10 +7,10 @@ import dataloader
 
 types = ["IMPROVED_LFU"] #"LFU", "TIME"]
 sdbs = ["30"]
-sdfs = ["60"]#"S=120"]
-scenarios = ["ScenarioTEST"]
-cache_sizes = ["1000"]
-n_files = ["500"]
+sdfs = ["25", "50", "100", "150", "200", "250"]#"S=120"]
+scenarios = ["ScenarioGEN_DEDUP"]
+cache_sizes = ["800"]
+n_files = ["1000"]
 file = "get_file_request"
 
 

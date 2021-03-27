@@ -14,13 +14,13 @@ def start_session(entry):
     if res.status_code < 200 or res.status_code > 299:
         raise Exception("Session was not started")
 
-path = "test_cache_size_gendedup.csv"
+path = "test_sd_files_fullfile.csv"
 with open(path) as f:
     entries = [{k: v for k, v in row.items()}
         for row in csv.DictReader(f, skipinitialspace=True)]
 
 for entry in entries: 
-    print(f"Starting scenario: {entry['scenario']}")
+    print(f"Starting scenario: {entry['scenario']} with sd_files = {entry['sd_files']}")
     start_session(entry)
     request_file_ids = list(map(lambda x: math.floor(x), truncnorm.rvs((0-int(entry['mean_files']))/int(entry['sd_files']),(int(entry['n_files'])-1-int(entry['mean_files']))/int(entry['sd_files']),loc=int(entry['mean_files']),scale=int(entry['sd_files']),size=int(entry['n_requests']))))
 
