@@ -29,7 +29,7 @@ def get_ratio(scenario, cache_size, n_file, type, sdf, sdb, file):
     
     in_cache_values = sum(list(map(lambda x: int(x["inCache"]), entries)))
 
-    x = 10000 if scenario == "ScenarioGEN_DEDUP" else 1000
+    x = 10000 if scenario == "ScenarioGEN_DEDUP" or scenario == "ScenarioDEDUP" else 1000
     print(x)
     cache_ratio = in_cache_values / x
 
@@ -39,7 +39,7 @@ def get_ratio(scenario, cache_size, n_file, type, sdf, sdb, file):
 types = ["IMPROVED_LFU"] #"LFU", "TIME"]
 sdb = "30"
 sdfs = ["25", "50", "100", "150", "200", "250"]#"S=120"]
-scenarios = ["ScenarioGEN_DEDUP", "ScenarioFULL_FILE"]
+scenarios = ["ScenarioGEN_DEDUP", "ScenarioFULL_FILE", "ScenarioDEDUP"]
 cache_size = "800"
 n_files = "1000"
 file = "cache_hits"
@@ -49,7 +49,7 @@ cache_ratio = {}
 for scenario in scenarios:
     for t in types:
         for sdf in sdfs:
-            size = "800" if scenario == "ScenarioGEN_DEDUP" else "80"
+            size = "800" if scenario == "ScenarioGEN_DEDUP" or scenario == "ScenarioDEDUP" else "80"
             ratio = get_ratio(scenario, size, n_files, t, sdf, sdb, file)
             cache_ratio[int(sdf)] = ratio
     lists = sorted(cache_ratio.items())
