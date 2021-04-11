@@ -14,7 +14,7 @@ def start_session(entry):
     if res.status_code < 200 or res.status_code > 299:
         raise Exception("Session was not started")
 
-path = "test_sd_bytes_fullfile.csv"
+path = "test_cache_size_gendedup.csv"
 with open(path) as f:
     entries = [{k: v for k, v in row.items()}
         for row in csv.DictReader(f, skipinitialspace=True)]
