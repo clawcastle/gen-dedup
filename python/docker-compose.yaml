@@ -6,10 +6,10 @@ services:
     environment:
       - NODE_ID=namenode
       - PORT_NO=3000
-      - STRATEGY=GEN_DEDUP # FULL_FILE | CODED | DEDUP | GEN_DEDUP
+      - STRATEGY=CODED # FULL_FILE | CODED | DEDUP | GEN_DEDUP
       - CACHE_STRATEGY=IMPROVED_LFU # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU
       - CACHE_SIZE=1000
-      - MEASUREMENT_MODE=1
+      - MEASUREMENT_MODE=0
       - BLOCK_SIZE=11
       - BASE_SIZE=10
     volumes:
@@ -48,3 +48,13 @@ services:
       - ./data/storagenode_3:/app/data
     ports:
       - 3003:3003
+  storagenode_4:
+    build: ./storagenode
+    container_name: storagenode_4
+    environment:
+      - NODE_ID=storagenode_4
+      - PORT_NO=3004
+    volumes:
+      - ./data/storagenode_4:/app/data
+    ports:
+      - 3004:3004

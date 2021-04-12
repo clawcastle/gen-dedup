@@ -43,7 +43,7 @@ class Cache:
                     writer = csv.DictWriter(f, fieldnames=self.labels)
                     writer.writerow({"filename": request_filename, "chunk": key, "inCache": 1 if cache_hit is not None else 0})
 
-            return cache_hit
+        return cache_hit
 
     def new_measurement_session(self):        
         settings = get_settings()

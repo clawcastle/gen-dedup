@@ -11,10 +11,11 @@ from nodes import Nodes
 from measurement_session import get_settings, put_setting, clear_session
 put_setting("cache_size", int(os.environ.get("CACHE_SIZE")))
 
+import reed_solomon
 import dedup as dedup
 import gen_dedup as gen_dedup
 import full_file as full_file
-
+import coded as coded
 
 BLOCK_SIZE = 1024
 
@@ -35,6 +36,7 @@ def add_file_data():
     file_length = len(file_data)
     file_name = request.form.get("file_name")
     content_type = ".bin"
+    reed_solomon.encode_file(file_data, 2)
 
     save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     return "", 200
@@ -58,7 +60,7 @@ def save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     if strategy == "FULL_FILE":
         full_file.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     elif strategy == "CODED":
-        pass
+        coded.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     elif strategy == "DEDUP":
         dedup.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     elif strategy == "GEN_DEDUP":
@@ -74,7 +76,7 @@ def get_file(filename):
     if strategy == "FULL_FILE":
         file_data = full_file.get_file(filename, size, blocks)
     elif strategy == "CODED":
-        pass
+        file_data = coded.get_file(filename, size, blocks)
     elif strategy == "DEDUP":
         file_data = dedup.get_file(filename, size, blocks)
     elif strategy == "GEN_DEDUP":
@@ -97,7 +99,7 @@ def start_measurement_session():
     if strategy == "FULL_FILE":
         full_file.new_measurement_session()
     elif strategy == "CODED":
-        pass
+        coded.new_measurement_session()
     elif strategy == "DEDUP":
         dedup.new_measurement_session()
     elif strategy == "GEN_DEDUP":
