@@ -1,0 +1,48 @@
+from expiringdict import ExpiringDict
+import os
+from measurement_session import get_settings
+from collections import deque
+from enum import enum
+
+class CodedCache:
+    file_metadata = {} #{count: 0, n_fragments: 0}
+    cache = {}
+    n_fragments = 0
+    total_count = 0
+    settings = get_settings()
+    CACHE_SIZE = settings["cache_size"]
+
+    def add_to_cache(self, key, values):
+        if self.file_metadata[key]['n_fragments'] == 10:
+            return
+
+        count = self.file_metadata[key]['count']
+        percentage = round(count / self.total_count * 100, 1)
+
+        if percentage >= 100 // self.CACHE_SIZE and percentage > self.file_metadata[key]['n_fragments'] / self.CACHE_SIZE * 10:
+            n_frags = 10 if percentage >= 1 else int(percentage * 10)
+            frags_to_be_removed = n_frags - self.file_metadata[key]['n_fragments']
+
+            self.cache[key] = values[:n_frags]
+            
+            for _ in range(frags_to_be_removed):
+                self.remove_from_cache()
+
+    def remove_from_cache(self):
+        for key, val in cache:
+            count = self.file_metadata[key]['count']
+            percentage = round(count / self.total_count * 100, 1)
+            if percentage <= 100 // self.CACHE_SIZE:
+                self.cache.pop(key)
+            elif percentage < self.file_metadata[key]['n_fragments'] / self.CACHE_SIZE * 10:
+                self.cache[key] = self.cache[key][1:]
+                self.file_metadata[key]['n_fragments'] = self.file_metadata[key]['n_fragments'] - 1
+
+    def is_in_cache(self, key):
+        return key in self.cache[key]
+
+    def get_from_cache(self, key):
+        if self.is_in_cache(key):
+            return self.cache[key]
+        else:
+            return None
