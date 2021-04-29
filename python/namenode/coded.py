@@ -14,19 +14,14 @@ import random
 import copy # for deepcopy
 import json
 import string
+import requests
+import base64
 
 nodes = Nodes()
 cache = Cache()
 
-N_FRAGMENTS = 4
-N_NEEDED_FRAGMENTS = 1
-
-RS_CAUCHY_COEFFS = [
-    bytearray([253, 126, 255, 127]),
-    bytearray([126, 253, 127, 255]),
-    bytearray([255, 127, 253, 126]),
-    bytearray([127, 255, 126, 253]),
-]
+N_FRAGMENTS = 10
+N_SUBFRAGMENTS = 2
 
 measuring = bool(os.environ.get("MEASUREMENT_MODE"))
 CACHE_STRATEGY = os.environ.get("CACHE_STRATEGY")
@@ -42,74 +37,66 @@ def random_string(length=8):
     return ''.join([random.SystemRandom().choice(string.ascii_letters + string.digits) for n in range(length)])
 
 def encode_file(file_data):
-    # Make sure we can realize N_NEEDED_FRAGMENTS with 4 storage nodes
-    assert(N_NEEDED_FRAGMENTS >= 0)
-    assert(N_NEEDED_FRAGMENTS < N_FRAGMENTS)
+    # How many coded subfragments (=symbols) will be required to reconstruct the encoded data.
+    symbols = N_FRAGMENTS * N_SUBFRAGMENTS
 
-    # How many coded fragments (=symbols) will be required to reconstruct the encoded data.
-    symbols = N_FRAGMENTS - N_NEEDED_FRAGMENTS
-    # The size of one coded fragment (total size/number of symbols, rounded up)
+    # The size of one coded subfragment (total size/number of symbols, rounded up)
     symbol_size = math.ceil(len(file_data)/symbols)
+
     # Kodo RLNC encoder using 2^8 finite field
     encoder = kodo.RLNCEncoder(kodo.field.binary8, symbols, symbol_size)
     encoder.set_symbols_storage(file_data)
 
-    encoded_fragments = []
+    fragment_names = []
 
-    # Generate one coded fragment for each Storage Node
+    fragment_dict = {}
+
     for i in range(N_FRAGMENTS):
-        # Select the next Reed Solomon coefficient vector
-        coefficients = RS_CAUCHY_COEFFS[i]
-        # Generate a coded fragment with these coefficients
-        # (trim the coeffs to the actual length we need)
-        symbol = encoder.produce_symbol(coefficients[:symbols])
-        # Generate a random name for it and save
+        # Generate a random name for them and save
         name = random_string(8)
-        #encoded_fragments.append(name)
+        fragment_names.append(name)
 
-        encoded_fragments.append({
-            "name": name,
-            "data": coefficients[:symbols] + bytearray(symbol)
-        })
+        subfragments = []
 
-    return encoded_fragments
+        for j in range(N_SUBFRAGMENTS):
+            # Create a random coefficient vector
+            coefficients = encoder.generate()
+            # Generate a coded fragment with these coefficients
+            symbol = encoder.produce_symbol(coefficients)
+            subfragments.append(coefficients + bytearray(symbol))
+        
+        subfrag_dict = {}
+        for i, subfrag in enumerate(subfragments):
+            subfrag_dict[f"{name}.{i}"] = subfrag
+
+
+        fragment_dict[name] = subfrag_dict
+    
+    return fragment_dict
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
     encoded_fragments = encode_file(file_data)
-
-    fragment_names = []
     metadata_dict = {}
-    for fragment in encoded_fragments:
-        fragment_names.append(fragment['name'])
 
+    for fragment_name, subfrag_dict in encoded_fragments.items():
         node_id = nodes.get_next_storage_node()
-
-        requests.post(f"http://{node_id}/block", files=dict(block=fragment["data"]), data=dict(block_name=fragment["name"]))
-
-        metadata_dict[fragment['name']] = node_id
+        requests.post(f"http://{node_id}/fragments", files=subfrag_dict)
+        metadata_dict[fragment_name] = node_id
 
     save_metadata(file_name, file_length, content_type, metadata_dict, "CODED")
 
 def decode_file(symbols):
-    """
-    Decode a file using Reed Solomon decoder and the provided coded symbols.
-    The number of symbols must be the same as N_FRAGMENTS - N_NEEDED_FRAGMENTS.
-
-    :param symbols: coded symbols that contain both the coefficients and symbol data
-    :return: the decoded file data
-    """
-
     # Reconstruct the original data with a decoder
     symbols_num = len(symbols)
-    symbol_size = len(symbols[0]['data']) - symbols_num #subtract the coefficients' size
+    symbol_size = len(symbols[0]) - symbols_num #subtract the coefficients' size
     decoder = kodo.RLNCDecoder(kodo.field.binary8, symbols_num, symbol_size)
     data_out = bytearray(decoder.block_size())
     decoder.set_symbols_storage(data_out)
 
     for symbol in symbols:
         # Separate the coefficients from the symbol data
-        coefficients = symbol['data'][:symbols_num]
-        symbol_data = symbol['data'][symbols_num:]
+        coefficients = symbol[:symbols_num]
+        symbol_data = symbol[symbols_num:]
         # Feed it to the decoder
         decoder.consume_symbol(symbol_data, coefficients)
 
@@ -118,46 +105,46 @@ def decode_file(symbols):
 
     return data_out
 
-def get_file(filename, size, fragments):
-    coded_fragments = [*fragments]
-        
-    # We need 4-N_NEEDED_FRAGMENTSfragments to reconstruct the file, select this many 
-    # by randomly removing 'N_NEEDED_FRAGMENTS' elements from the given chunk names. 
-    fragnames = copy.deepcopy(coded_fragments)
-
-    for i in range(N_NEEDED_FRAGMENTS):
-        fragnames.remove(random.choice(fragnames))
-    
+def get_file(filename, size, metadata_dict):
+    cache_val = cache.get_from_cache(filename, filename)
     symbols = []
-    hits = 0
-    # Request the coded fragments in parallel
-    for name in fragnames:
-        cache_val = cache.get_from_cache(name, filename)
-        if cache_val is not None:
-            hits += 1
-            symbols.append({
-                "chunkname": name, 
-                "data": bytearray(cache_val)
-            })
-        else:
-            req = requests.get(f"http://{fragments[name]}/block/{name}")
-            req_val = req.content
-            symbols.append({
-                "chunkname": name, 
-                "data": bytearray(req_val)
-            })
-            cache.add_to_cache(name, req_val)
+    
+    all_values = copy.deepcopy(cache_val)
+    
+    for fragment in cache_val:
+        for _, subfragvals in fragment.items():
+            symbols.extend(subfragvals)
+    
+    missing = [*metadata_dict]
 
-    #Reconstruct the original file data
-    file_data = decode_file(symbols)
+    for fragment in cache_val:
+        for fragname in [*fragment]:
+            missing.remove(fragname)
+    
+    for fragment_name in missing:
+        subfrags = []
+        node_id = metadata_dict[fragment_name]
+        frag_response = requests.get(f"http://{node_id}/fragments/{fragment_name}/{N_SUBFRAGMENTS}")
+        fragment_data = frag_response.json()
+        for _, sub_frag_b64 in fragment_data.items():
+            print(f"TYPE: {type(sub_frag_b64)}", flush=True)
+            sub_frag_val = bytearray(base64.b64decode(sub_frag_b64))
+            symbols.append(sub_frag_val)
+            subfrags.append(sub_frag_val)
+        all_values.append({fragment_name: subfrags})
+
+    
+    data = decode_file(symbols)
+
+    cache.add_to_cache(filename, all_values)
 
     if measuring:
         with open(csvfile, "a") as f:
             writer = csv.DictWriter(f, fieldnames=labels)
-            writer.writerow({"filename": filename, "n_blocks": len(fragnames), "cache_hits": hits})
+            writer.writerow({"filename": filename, "n_blocks": N_FRAGMENTS, "cache_hits": len(cache_val)})
 
     # file = b"".join(file_blocks)
-    return io.BytesIO(file_data)
+    return io.BytesIO(data)
 
 def new_measurement_session():
     if measuring:

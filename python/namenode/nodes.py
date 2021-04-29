@@ -1,5 +1,5 @@
 class Nodes:
-    nodes = ["storagenode_1:3001", "storagenode_2:3002", "storagenode_3:3003"]
+    nodes = ["storagenode_1:3001", "storagenode_2:3002", "storagenode_3:3003", "storagenode_4:3004"]
     count = 1
 
     def get_next_storage_node(self):

@@ -22,7 +22,7 @@ print("Starting get requests")
 timings = []
 labels = ["request_id", "file_id", "elapsed_time"]
 for i, id in enumerate(request_file_ids):
-    file_name = f"file_{id}"
+    file_name = f"CODED_{id}"
     start = time()
     response = requests.get(f"http://localhost:3000/file/{file_name}")
     elapsed = time() - start

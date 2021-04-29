@@ -1,6 +1,7 @@
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, jsonify
 import os
 from random import randint
+import base64
 
 app = Flask(__name__)
 
@@ -29,6 +30,37 @@ def add_block():
         return make_response("Error saving file", 500)
 
     return "", 200
+
+@app.route("/fragments", methods=["POST"])
+def add_fragments():
+    if not request.files:
+        return make_response("No data", 400)
+
+    for key, sub_frag in request.files.items():
+        data = bytearray(sub_frag.read())
+        try:
+            with open(f"./data/{key}.bin", "wb") as f:
+                f.write(data)
+        except EnvironmentError as e:
+            print(f"Error writing fragment: {key}", flush=True)
+            print(e)
+            return make_response("Error saving fragment", 500)
+    
+    return "", 200
+
+@app.route("/fragments/<fragment_name>/<n_sub_fragments>", methods=["GET"])
+def get_sub_fragments(fragment_name, n_sub_fragments):
+    sub_frag_dict = {}
+    for i in range(int(n_sub_fragments)):
+        try:
+            with open(f"./data/{fragment_name}.{i}.bin", "rb") as f:
+                subfrag = f.read()
+                subfrag_b64 = base64.b64encode(subfrag).decode("utf-8")
+                sub_frag_dict[f"{fragment_name}.{i}"] = subfrag_b64
+        except FileNotFoundError:
+            return make_response("File does not exist", 404)
+    
+    return jsonify(sub_frag_dict)
 
 @app.route("/block/<blockname>", methods=["GET"])
 def get_block(blockname):

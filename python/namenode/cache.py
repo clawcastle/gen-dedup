@@ -1,4 +1,4 @@
-from cache_strategies import fifo_cache, lfu_cache, time_cache, simple_cache, improved_lfu_cache
+from cache_strategies import fifo_cache, lfu_cache, time_cache, simple_cache, improved_lfu_cache, coded_cache
 import os
 import csv
 from measurement_session import get_settings
@@ -26,6 +26,9 @@ class Cache:
         elif self.CACHE_STRATEGY == "IMPROVED_LFU":
             print("IMPROVED_LFU", flush=True)
             self.cache = improved_lfu_cache.ImprovedLFUCache()
+        elif self.CACHE_STRATEGY == "CODED":
+            print("CODED", flush=True)
+            self.cache = coded_cache.CodedCache()
         else:
             self.cache = simple_cache.SimpleCache()
 
@@ -51,8 +54,6 @@ class Cache:
         self.cache.clear()
         if self.measuring:
             folder_path = f'./measurements/Scenario{settings["scenario"]}/CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}/{self.CACHE_STRATEGY}_SDF={settings["sd_files"]}_SDB={settings["sd_bytes"]}'
-            # subfolder_path = f'CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}'
-            # subsubfolder_path = f'{self.CACHE_STRATEGY}_SDF={settings["sd_files"]}_SDB={settings["sd_bytes"]}'
 
             Path(folder_path).mkdir(parents=True, exist_ok=True)
 

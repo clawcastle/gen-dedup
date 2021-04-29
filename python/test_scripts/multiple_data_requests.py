@@ -14,7 +14,7 @@ def start_session(entry):
     if res.status_code < 200 or res.status_code > 299:
         raise Exception("Session was not started")
 
-path = "test_cache_size_gendedup.csv"
+path = "test_cache_size_coded.csv"
 with open(path) as f:
     entries = [{k: v for k, v in row.items()}
         for row in csv.DictReader(f, skipinitialspace=True)]
@@ -28,7 +28,7 @@ for entry in entries:
     timings = []
     labels = ["request_id", "file_id", "elapsed_time"]
     for i, id in enumerate(request_file_ids):
-        file_name = f"{entry['scenario']}_SD{entry['sd_bytes']}_{id}"
+        file_name = f"{entry['scenario']}_{id}"
         start = time()
         response = requests.get(f"http://localhost:3000/file/{file_name}")
         elapsed = time() - start

@@ -27,7 +27,7 @@ file = "cache_hits"
 # plt.plot(x, y)
 # plt.show()
 
-scenarios = ["FULL_FILE", "GEN_DEDUP", "DEDUP"]
+scenarios = ["FULL_FILE", "GEN_DEDUP", "DEDUP", "CODED"]
 for scenario in scenarios:
     cache_ratio = {}
     i = 0
@@ -38,11 +38,14 @@ for scenario in scenarios:
     else:
         cache_sizes = ["100", "200", "300", "500", "700", "1000", "1500", "2000"]
 
+
+    types = ["CODED"] if scenario == "CODED" else ["IMPROVED_LFU"]
     for occurences, entries in dataloader.load_data(["Scenario" + scenario], cache_sizes, n_files, types, sdfs, sdbs, file):
-        entries = entries[5000:] if scenario == "GEN_DEDUP" or scenario == "DEDUP" else entries[500:]
+        entries = entries[5000:] if scenario == "GEN_DEDUP" or scenario == "DEDUP" or scenario == "CODED" else entries[500:]
         
         in_cache_values = sum(list(map(lambda x: int(x["inCache"]), entries)))
-
+        if scenario == "CODED":
+            print(in_cache_values)
         if scenario == "FULL_FILE":
             cache_ratio[int(cache_sizes[i])*10] = in_cache_values / 500
         else:

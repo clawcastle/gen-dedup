@@ -11,7 +11,6 @@ from nodes import Nodes
 from measurement_session import get_settings, put_setting, clear_session
 put_setting("cache_size", int(os.environ.get("CACHE_SIZE")))
 
-import reed_solomon
 import dedup as dedup
 import gen_dedup as gen_dedup
 import full_file as full_file
@@ -28,19 +27,6 @@ strategy = os.environ.get("STRATEGY") if os.environ.get("STRATEGY") is not None 
 
 print(f"Strategy: {strategy}.")
 
-@app.route("/file_data", methods=["POST"])
-def add_file_data():
-    files = request.files
-    file = files.get("file")
-    file_data = bytearray(file.read())
-    file_length = len(file_data)
-    file_name = request.form.get("file_name")
-    content_type = ".bin"
-    reed_solomon.encode_file(file_data, 2)
-
-    save_file_data_and_metadata(file_data, file_name, file_length, content_type)
-    return "", 200
-
 
 @app.route("/file", methods=["POST"])
 def add_file():
@@ -55,6 +41,17 @@ def add_file():
     save_file_data_and_metadata(file_data, file.filename, file_length, content_type)
     return "", 200
 
+@app.route("/file_data", methods=["POST"])
+def add_file_data():
+    files = request.files
+    file = files.get("file")
+    file_data = bytearray(file.read())
+    file_length = len(file_data)
+    file_name = request.form.get("file_name")
+    content_type = ".bin"
+
+    save_file_data_and_metadata(file_data, file_name, file_length, content_type)
+    return "", 200
 
 def save_file_data_and_metadata(file_data, file_name, file_length, content_type):
     if strategy == "FULL_FILE":
@@ -65,6 +62,8 @@ def save_file_data_and_metadata(file_data, file_name, file_length, content_type)
         dedup.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
     elif strategy == "GEN_DEDUP":
         gen_dedup.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
+    elif strategy == "CODED":
+        coded.save_file_data_and_metadata(file_data, file_name, file_length, content_type)
 
 @app.route("/file/<filename>", methods=["GET"])
 def get_file(filename):
@@ -81,6 +80,8 @@ def get_file(filename):
         file_data = dedup.get_file(filename, size, blocks)
     elif strategy == "GEN_DEDUP":
         file_data = gen_dedup.get_file(filename, size, blocks)
+    elif strategy == "CODED":
+        file_data = coded.get_file(filename, size, blocks)
 
     return send_file(file_data, mimetype=content_type, as_attachment=True, attachment_filename=filename)
 
@@ -104,6 +105,8 @@ def start_measurement_session():
         dedup.new_measurement_session()
     elif strategy == "GEN_DEDUP":
         gen_dedup.new_measurement_session()
+    elif strategy == "CODED":
+        coded.new_measurement_session()
 
     return "", 200
 

@@ -31,7 +31,7 @@ def generate_file(file_name):
 
 print("Sending post requests")
 for n in file_name_range:
-    file_name = f"DEDUP_{n}"
+    file_name = f"CODED_{n}"
     file_data = generate_file(file_name)
     requests.post(f"http://localhost:3000/file_data", files=dict(file=file_data), data=dict(file_name=file_name))
 print("Completed post requests")
