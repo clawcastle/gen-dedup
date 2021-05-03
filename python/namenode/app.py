@@ -100,13 +100,12 @@ def start_measurement_session():
     if strategy == "FULL_FILE":
         full_file.new_measurement_session()
     elif strategy == "CODED":
+        print("coded", flush=True)
         coded.new_measurement_session()
     elif strategy == "DEDUP":
         dedup.new_measurement_session()
     elif strategy == "GEN_DEDUP":
         gen_dedup.new_measurement_session()
-    elif strategy == "CODED":
-        coded.new_measurement_session()
 
     return "", 200
 

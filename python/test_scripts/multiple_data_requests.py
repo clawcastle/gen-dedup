@@ -10,6 +10,7 @@ import settings
 
 
 def start_session(entry):
+    print(entry['cache_size'])
     res = requests.post("http://localhost:3000/measurements/session/start", data=dict(sd_files=entry['sd_files'], sd_bytes=entry['sd_bytes'], mean_files=entry['mean_files'], mean_bytes=entry['mean_bytes'], scenario=entry['scenario'], n_files=entry['n_files'], n_requests=entry['n_requests'], cache_size=entry['cache_size']))
     if res.status_code < 200 or res.status_code > 299:
         raise Exception("Session was not started")

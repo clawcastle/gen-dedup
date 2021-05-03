@@ -127,7 +127,6 @@ def get_file(filename, size, metadata_dict):
         frag_response = requests.get(f"http://{node_id}/fragments/{fragment_name}/{N_SUBFRAGMENTS}")
         fragment_data = frag_response.json()
         for _, sub_frag_b64 in fragment_data.items():
-            print(f"TYPE: {type(sub_frag_b64)}", flush=True)
             sub_frag_val = bytearray(base64.b64decode(sub_frag_b64))
             symbols.append(sub_frag_val)
             subfrags.append(sub_frag_val)
@@ -150,6 +149,7 @@ def new_measurement_session():
     if measuring:
         settings = get_settings()
         cache_size = settings["cache_size"]
+        print(f"CACHE_SIZE: {cache_size}", flush=True)
         folder_path = f'./measurements/Scenario{settings["scenario"]}/CACHE_SIZE={cache_size}_NFILES={settings["n_files"]}/{CACHE_STRATEGY}_SDF={settings["sd_files"]}_SDB={settings["sd_bytes"]}'
         Path(folder_path).mkdir(parents=True, exist_ok=True)
 

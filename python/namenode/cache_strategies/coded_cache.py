@@ -43,11 +43,14 @@ class CodedCache:
         return key in self.cache
 
     def clear(self):
+        self.settings = get_settings()
+        self.CACHE_SIZE = self.settings["cache_size"]
         self.cache = {}
         self.file_metadata = {}
         self.total_count = 0
 
     def get_from_cache(self, key):
+        print(self.CACHE_SIZE, flush=True)
         self.total_count += 1
         if key in self.file_metadata:
             self.file_metadata[key]["count"] += 1

@@ -41,10 +41,19 @@ class Cache:
     def get_from_cache(self, key, request_filename):
         cache_hit = self.cache.get_from_cache(key)
 
-        if self.measuring:
-            with open(self.filename, "a") as f:
+        remaining = 10 - len(cache_hit)
+
+        for i in range(len(cache_hit)):
+            if self.measuring:
+                with open(self.filename, "a") as f:
                     writer = csv.DictWriter(f, fieldnames=self.labels)
-                    writer.writerow({"filename": request_filename, "chunk": key, "inCache": 1 if cache_hit is not None else 0})
+                    writer.writerow({"filename": request_filename, "chunk": request_filename, "inCache": 1})
+
+        for i in range(remaining):
+            if self.measuring:
+                with open(self.filename, "a") as f:
+                    writer = csv.DictWriter(f, fieldnames=self.labels)
+                    writer.writerow({"filename": request_filename, "chunk": request_filename, "inCache": 0})
 
         return cache_hit
 

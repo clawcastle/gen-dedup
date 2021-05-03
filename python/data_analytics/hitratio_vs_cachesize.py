@@ -45,7 +45,7 @@ for scenario in scenarios:
         
         in_cache_values = sum(list(map(lambda x: int(x["inCache"]), entries)))
         if scenario == "CODED":
-            print(in_cache_values)
+            cache_ratio[int(cache_sizes[i])] = in_cache_values / 5000
         if scenario == "FULL_FILE":
             cache_ratio[int(cache_sizes[i])*10] = in_cache_values / 500
         else:
@@ -57,7 +57,7 @@ for scenario in scenarios:
     plt.plot(x, y, label=scenario)
 plt.xlabel("Cache size")
 plt.ylabel("Cache utilization ratio")
-plt.title("FIFO cache")
+plt.title("Cache utilization ratios")
 plt.legend(loc="upper right")
 plt.show()
 
