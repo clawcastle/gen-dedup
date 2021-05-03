@@ -8,7 +8,6 @@ class CodedCache:
     file_metadata = {}  # {count: 0, n_fragments: 0}
     cache = {}
     total_count = 0
-    cache_to_percentage = {}
     CACHE_SIZE = 100
     THRESHOLD_FOR_SINGLE_FRAG = 100 / CACHE_SIZE
 
@@ -141,6 +140,7 @@ class CodedCache:
         self.cache = {}
         self.file_metadata = {}
         self.total_count = 0
+        self.n_fragments = 0
 
     def get_from_cache(self, key):
         self.total_count += 1
