@@ -155,8 +155,11 @@ class CodedCache:
         self.total_count += 1
         if key in self.file_metadata:
             self.file_metadata[key]["count"] += 1
-        if self.is_in_cache(key):
-            return self.cache[key]
+            if self.is_in_cache(key):
+                return self.cache[key]
+            else:
+                return []
         else:
             self.file_metadata[key] = {"count": 1, "n_fragments": 0}
             return []
+
