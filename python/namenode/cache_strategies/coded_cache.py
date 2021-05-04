@@ -2,113 +2,17 @@ from expiringdict import ExpiringDict
 import os
 from measurement_session import get_settings
 from collections import deque
+import json
 
 class CodedCache:
+    n_fragments = 0
     file_metadata = {}  # {count: 0, n_fragments: 0}
     cache = {}
     total_count = 0
-    CACHE_SIZE = 100
+    cache_to_percentage = {}
+    settings = get_settings()
+    CACHE_SIZE = settings["cache_size"]
     THRESHOLD_FOR_SINGLE_FRAG = 100 / CACHE_SIZE
-
-    # {file1: [{frag1: [...]}, {frag2: [...]}]}
-
-    def calculate_n_frags_allowed_in_cache(self, percentage):
-        # Returns the number of fragments that the given file should have stored in cache
-        n = int(percentage / self.THRESHOLD_FOR_SINGLE_FRAG)
-        return 10 if n >= 10 else n
-
-    def find_percentage_of_requests(self, count):
-        # Calculates the percentage
-        return 100 if self.total_count == 0 else round(count / self.total_count * 100, 1)
-
-    def cache_should_be_updated(self, key, req_percentage):
-        # Determines if the percentages of all requests is above the threshold needed to get a single fragment into the
-        # cache and if the cache already has fragments of that file, it determines whether the percentage of all s
-        # request allows for more entries in the cache.
-        is_above_threshold = req_percentage >= self.THRESHOLD_FOR_SINGLE_FRAG
-        more_frags_should_be_added = req_percentage > self.file_metadata[key]['n_fragments'] * self.THRESHOLD_FOR_SINGLE_FRAG
-
-        return is_above_threshold and more_frags_should_be_added
-
-    def get_length_of_cache_content(self):
-        n_frags = 0
-        for k, v in self.cache.items():
-            n_frags = n_frags + len(v)
-
-        return n_frags
-
-    def remove_n_from_cache(self, n_frags_to_be_removed):
-        total_removed = 0
-
-        for i in range(n_frags_to_be_removed):
-            # Since multiple fragments can be removed through one iteration, we do this check:
-            if total_removed > i:
-                continue
-            keys_to_pop = []
-            for key, val in self.cache.items():
-                count = self.file_metadata[key]['count']
-                req_percentage = self.find_percentage_of_requests(count)
-                n_frags_allowed = self.calculate_n_frags_allowed_in_cache(req_percentage)
-                n_frags_in_cache = self.file_metadata[key]['n_fragments']
-                if n_frags_allowed == 0:
-                    # The percentage is too low to allow any fragments in cache, hence the key is removed from the cache
-                    keys_to_pop.append(key)
-                    self.file_metadata[key]['n_fragments'] = 0
-                    total_removed += n_frags_in_cache
-                    break
-
-                elif n_frags_allowed < self.file_metadata[key]['n_fragments']:
-                    # The percentage is lower than the amount of fragments that it is permitted. Hence we need to reduce
-                    # the number of fragments for that key
-                    n_removed = n_frags_in_cache - n_frags_allowed
-
-                    if n_removed > n_frags_to_be_removed - i:
-                        # The percentage allows for fewer fragments, but there is no need to remove more than
-                        # absolutely needed. In such a case we update n_removed and n_frags_allowed
-                        n_removed = n_frags_to_be_removed - i
-                        n_frags_allowed = n_frags_in_cache - n_removed
-
-                    self.cache[key] = self.cache[key][:n_frags_allowed]
-                    self.file_metadata[key]['n_fragments'] = self.file_metadata[key]['n_fragments'] - n_removed
-
-                    if self.file_metadata[key]['n_fragments'] == 0:
-                        keys_to_pop.append(key)
-
-                    total_removed += n_removed
-                    break
-
-            for key in keys_to_pop:
-                self.cache.pop(key)
-
-        return total_removed
-
-    def force_fragments_out(self, req_percentage, n_frags_to_be_removed):
-        total_removed = 0
-
-        for i in range(n_frags_to_be_removed):
-            keys_to_pop = []
-            for key, val in self.cache.items():
-                count = self.file_metadata[key]['count']
-                cache_req_percentage = self.find_percentage_of_requests(count)
-
-                if req_percentage > cache_req_percentage:
-                    n_frags_in_cache = self.file_metadata[key]['n_fragments']
-
-                    if n_frags_in_cache == 1:
-                        # The percentage is lower than the new file - we remove the last fragment, and thereby the element
-                        keys_to_pop.append(key)
-                        total_removed += 1
-                        break
-                    else:
-                        # The percentage is lower, we remove a single fragment
-                        self.cache[key] = self.cache[key][:n_frags_in_cache - 1]
-                        self.file_metadata[key]['n_fragments'] = self.file_metadata[key]['n_fragments'] - 1
-
-                        total_removed += 1
-                        break
-            for key in keys_to_pop:
-                self.cache.pop(key)
-        return total_removed
 
     def add_to_cache(self, key, values):
         if key not in self.file_metadata:
@@ -117,44 +21,134 @@ class CodedCache:
         if self.file_metadata[key]['n_fragments'] == 10:
             return
 
-        count = self.file_metadata[key]['count']
-        req_percentage = self.find_percentage_of_requests(count)
+        if self.n_fragments < self.CACHE_SIZE:
+            self.file_metadata[key]['n_fragments'] = 1
+            self.cache[key] = values[:1]
+            self.n_fragments += 1
+            return
 
-        if self.cache_should_be_updated(key, req_percentage):
-            n_frags_allowed = self.calculate_n_frags_allowed_in_cache(req_percentage)
-            n_frags_in_cache = self.get_length_of_cache_content()
+        if self.is_in_cache(key):
+            total = 0
+            counts = []
+            keys = []
+            for k, v in self.cache.items():
+                cache_val_count = self.file_metadata[k]["count"]
+                total += cache_val_count
+                counts.append(cache_val_count)
+                keys.append(k)
 
-            if n_frags_in_cache + n_frags_allowed <= self.CACHE_SIZE:
-                # There is room in the cache for the fragments, hence nothing gets removed.
-                self.file_metadata[key]['n_fragments'] = n_frags_allowed
-                self.cache[key] = values[:n_frags_allowed]
-            else:
-                # We remove the number of frags needed to obtain the space needed for the n_frags_allowed
-                n_frags_to_be_removed = n_frags_in_cache + n_frags_allowed - self.CACHE_SIZE
+            # Consider adding count to total
 
-                n_removed = self.remove_n_from_cache(n_frags_to_be_removed)
+            ordered_keys = [keys for _, keys in sorted(zip(counts, keys), reverse=True)]
 
-                if n_frags_to_be_removed != n_removed:
-                    n_frags_to_be_removed = n_frags_to_be_removed - n_removed
-                    n_removed = n_removed + self.force_fragments_out(req_percentage, n_frags_to_be_removed)
+            potential_frags_to_remove = {}
 
-                # Adding the fragments to the cache
-                if n_frags_allowed - n_removed != 0:
-                    self.file_metadata[key]['n_fragments'] = n_frags_allowed - n_removed
-                    self.cache[key] = values[:n_frags_allowed - n_removed]
+            for k in ordered_keys:
+                if k == key:
+                    continue
+
+                percentage = round(self.file_metadata[k]["count"] / total * 100, 1)
+                if percentage < self.THRESHOLD_FOR_SINGLE_FRAG * self.file_metadata[k]["n_fragments"]:
+                    adjusted_n_frags = percentage // self.THRESHOLD_FOR_SINGLE_FRAG
+                    if adjusted_n_frags < self.file_metadata[k]["n_fragments"]:
+                        potential_frags_to_remove[k] = int(self.file_metadata[k]["n_fragments"] - adjusted_n_frags)
+
+                if percentage > self.THRESHOLD_FOR_SINGLE_FRAG * 10:
+                    total = total - self.file_metadata[k]["count"] + int(
+                        total / 100 * self.THRESHOLD_FOR_SINGLE_FRAG * 10)
+
+            count = self.file_metadata[key]["count"]
+            percentage = round(count / total * 100, 1)
+
+            if percentage > self.THRESHOLD_FOR_SINGLE_FRAG * self.file_metadata[key]["n_fragments"]:
+                adjusted_n_frags = 10 if percentage // self.THRESHOLD_FOR_SINGLE_FRAG > 10 else int(
+                    percentage // self.THRESHOLD_FOR_SINGLE_FRAG)
+                if adjusted_n_frags > self.file_metadata[key]["n_fragments"]:
+                    frags_to_remove = adjusted_n_frags - self.file_metadata[key]["n_fragments"]
+
+                    n_removed = 0
+                    for _ in range(frags_to_remove):
+                        if n_removed == frags_to_remove:
+                            break
+
+                        keys_to_remove = []
+                        for k, v in potential_frags_to_remove.items():
+                            if v <= frags_to_remove - n_removed:
+                                if self.file_metadata[k]["n_fragments"] - v == 0:
+                                    self.cache.pop(k)
+                                    self.file_metadata[k]["n_fragments"] = 0
+                                    keys_to_remove.append(k)
+                                    n_removed += v
+                                    break
+                                else:
+                                    self.cache[k] = self.cache[k][:self.file_metadata[k]["n_fragments"] - v]
+                                    self.file_metadata[k]['n_fragments'] = self.file_metadata[k]["n_fragments"] - v
+                                    n_removed += v
+                                    keys_to_remove.append(k)
+                                    break
+
+                            else:
+                                to_remove = frags_to_remove - n_removed
+                                adjusted_n_frags = self.file_metadata[k]["n_fragments"] - to_remove
+                                self.cache[k] = self.cache[k][:adjusted_n_frags]
+                                self.file_metadata[k]['n_fragments'] = self.file_metadata[k]['n_fragments'] - to_remove
+                                n_removed += to_remove
+
+                        for k in keys_to_remove:
+                            potential_frags_to_remove.pop(k)
+
+                    if n_removed != frags_to_remove:
+                        actually_allowed = frags_to_remove - n_removed
+                        if actually_allowed == 0:
+                            return
+                        self.file_metadata[key]['n_fragments'] = actually_allowed
+                        self.cache[key] = values[:actually_allowed]
+                    else:
+                        self.file_metadata[key]['n_fragments'] = adjusted_n_frags
+                        self.cache[key] = values[:adjusted_n_frags]
+
+        else:
+            cache_keys = []
+            percentages = []
+            lowest_percentage = 100
+            for k, v in self.cache.items():
+                cache_val_count = self.file_metadata[k]["count"]
+                percentage = round(cache_val_count / self.total_count * 100, 1)
+                cache_keys.append(k)
+                percentages.append(percentage)
+                if percentage < lowest_percentage:
+                    lowest_percentage = percentage
+
+            percentage = round(self.file_metadata[key]["count"] / self.total_count * 100, 1)
+            if percentage >= lowest_percentage:
+                ordered_keys = [keys for _, keys in sorted(zip(percentages, cache_keys))]
+                key_to_loose_a_frag = ordered_keys[0]
+
+                if self.file_metadata[key_to_loose_a_frag]["n_fragments"] - 1 == 0:
+                    self.cache.pop(key_to_loose_a_frag)
+                    self.file_metadata[key_to_loose_a_frag]["n_fragments"] = 0
+                else:
+                    self.cache[key_to_loose_a_frag] = self.cache[key_to_loose_a_frag][
+                                                      :self.file_metadata[key_to_loose_a_frag]["n_fragments"] - 1]
+                    self.file_metadata[key_to_loose_a_frag]['n_fragments'] = self.file_metadata[key_to_loose_a_frag][
+                                                                                 "n_fragments"] - 1
+
+                self.file_metadata[key]['n_fragments'] = 1
+                self.cache[key] = values[:1]
 
     def is_in_cache(self, key):
         return key in self.cache
 
     def clear(self):
+        self.cache = {}
         self.settings = get_settings()
         self.CACHE_SIZE = self.settings["cache_size"]
-        self.cache = {}
+        self.THRESHOLD_FOR_SINGLE_FRAG = 100 / self.CACHE_SIZE
         self.file_metadata = {}
         self.total_count = 0
+        
 
     def get_from_cache(self, key):
-        print(self.CACHE_SIZE, flush=True)
         self.total_count += 1
         if key in self.file_metadata:
             self.file_metadata[key]["count"] += 1
@@ -165,4 +159,3 @@ class CodedCache:
         else:
             self.file_metadata[key] = {"count": 1, "n_fragments": 0}
             return []
-

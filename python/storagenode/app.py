@@ -2,6 +2,9 @@ from flask import Flask, request, make_response, jsonify
 import os
 from random import randint
 import base64
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 app = Flask(__name__)
 

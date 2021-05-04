@@ -1,7 +1,7 @@
 from expiringdict import ExpiringDict
 import os
+from measurement_session import get_settings
 from collections import deque
-
 
 class CodedCache:
     n_fragments = 0
@@ -9,7 +9,8 @@ class CodedCache:
     cache = {}
     total_count = 0
     cache_to_percentage = {}
-    CACHE_SIZE = 100
+    settings = get_settings()
+    CACHE_SIZE = settings["cache_size"]
     THRESHOLD_FOR_SINGLE_FRAG = 100 / CACHE_SIZE
 
     def add_to_cache(self, key, values):
@@ -139,8 +140,12 @@ class CodedCache:
 
     def clear(self):
         self.cache = {}
+        self.settings = get_settings()
+        self.CACHE_SIZE = self.settings["cache_size"]
+        self.THRESHOLD_FOR_SINGLE_FRAG = 100 / CACHE_SIZE
         self.file_metadata = {}
         self.total_count = 0
+        
 
     def get_from_cache(self, key):
         self.total_count += 1

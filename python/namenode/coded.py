@@ -108,6 +108,7 @@ def decode_file(symbols):
 def get_file(filename, size, metadata_dict):
     cache_val = cache.get_from_cache(filename, filename)
     symbols = []
+    counter = 0
     
     all_values = copy.deepcopy(cache_val)
     
@@ -119,6 +120,9 @@ def get_file(filename, size, metadata_dict):
 
     for fragment in cache_val:
         for fragname in [*fragment]:
+            counter += 1
+            if fragname not in missing:
+                print(f"missing: {missing}, fragname: {fragname}", flush=True)
             missing.remove(fragname)
     
     for fragment_name in missing:
