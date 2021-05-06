@@ -9,7 +9,6 @@ class CodedCache:
     file_metadata = {}  # {count: 0, n_fragments: 0}
     cache = {}
     total_count = 0
-    cache_to_percentage = {}
     settings = get_settings()
     CACHE_SIZE = settings["cache_size"]
     THRESHOLD_FOR_SINGLE_FRAG = 100 / CACHE_SIZE
@@ -22,8 +21,8 @@ class CodedCache:
             return
 
         if self.n_fragments < self.CACHE_SIZE:
-            self.file_metadata[key]['n_fragments'] = 1
-            self.cache[key] = values[:1]
+            self.file_metadata[key]['n_fragments'] = self.file_metadata[key]['n_fragments'] + 1
+            self.cache[key] = values[:self.file_metadata[key]['n_fragments']]
             self.n_fragments += 1
             return
 
@@ -47,7 +46,7 @@ class CodedCache:
                 if k == key:
                     continue
 
-                percentage = round(self.file_metadata[k]["count"] / total * 100, 1)
+                percentage = round(self.file_metadata[k]["count"] / total * 100, 5)
                 if percentage < self.THRESHOLD_FOR_SINGLE_FRAG * self.file_metadata[k]["n_fragments"]:
                     adjusted_n_frags = percentage // self.THRESHOLD_FOR_SINGLE_FRAG
                     if adjusted_n_frags < self.file_metadata[k]["n_fragments"]:
@@ -58,7 +57,7 @@ class CodedCache:
                         total / 100 * self.THRESHOLD_FOR_SINGLE_FRAG * 10)
 
             count = self.file_metadata[key]["count"]
-            percentage = round(count / total * 100, 1)
+            percentage = round(count / total * 100, 5)
 
             if percentage > self.THRESHOLD_FOR_SINGLE_FRAG * self.file_metadata[key]["n_fragments"]:
                 adjusted_n_frags = 10 if percentage // self.THRESHOLD_FOR_SINGLE_FRAG > 10 else int(
@@ -66,13 +65,16 @@ class CodedCache:
                 if adjusted_n_frags > self.file_metadata[key]["n_fragments"]:
                     frags_to_remove = adjusted_n_frags - self.file_metadata[key]["n_fragments"]
 
+                    pftr_keys = list(potential_frags_to_remove.keys())
+                    # random.shuffle(pftr_keys)
                     n_removed = 0
                     for _ in range(frags_to_remove):
                         if n_removed == frags_to_remove:
                             break
 
                         keys_to_remove = []
-                        for k, v in potential_frags_to_remove.items():
+                        for k in pftr_keys:
+                            v = potential_frags_to_remove[k]
                             if v <= frags_to_remove - n_removed:
                                 if self.file_metadata[k]["n_fragments"] - v == 0:
                                     self.cache.pop(k)
@@ -89,20 +91,21 @@ class CodedCache:
 
                             else:
                                 to_remove = frags_to_remove - n_removed
-                                adjusted_n_frags = self.file_metadata[k]["n_fragments"] - to_remove
-                                self.cache[k] = self.cache[k][:adjusted_n_frags]
+                                actual_n_frags = self.file_metadata[k]["n_fragments"] - to_remove
+                                self.cache[k] = self.cache[k][:actual_n_frags]
                                 self.file_metadata[k]['n_fragments'] = self.file_metadata[k]['n_fragments'] - to_remove
                                 n_removed += to_remove
+                                break
 
                         for k in keys_to_remove:
                             potential_frags_to_remove.pop(k)
+                            pftr_keys.remove(k)
 
                     if n_removed != frags_to_remove:
-                        actually_allowed = frags_to_remove - n_removed
-                        if actually_allowed == 0:
-                            return
+                        actually_allowed = self.file_metadata[key]['n_fragments'] + n_removed
                         self.file_metadata[key]['n_fragments'] = actually_allowed
                         self.cache[key] = values[:actually_allowed]
+
                     else:
                         self.file_metadata[key]['n_fragments'] = adjusted_n_frags
                         self.cache[key] = values[:adjusted_n_frags]
@@ -113,13 +116,13 @@ class CodedCache:
             lowest_percentage = 100
             for k, v in self.cache.items():
                 cache_val_count = self.file_metadata[k]["count"]
-                percentage = round(cache_val_count / self.total_count * 100, 1)
+                percentage = round(cache_val_count / self.total_count * 100, 5)
                 cache_keys.append(k)
                 percentages.append(percentage)
                 if percentage < lowest_percentage:
                     lowest_percentage = percentage
 
-            percentage = round(self.file_metadata[key]["count"] / self.total_count * 100, 1)
+            percentage = round(self.file_metadata[key]["count"] / self.total_count * 100, 5)
             if percentage >= lowest_percentage:
                 ordered_keys = [keys for _, keys in sorted(zip(percentages, cache_keys))]
                 key_to_loose_a_frag = ordered_keys[0]
@@ -140,6 +143,9 @@ class CodedCache:
         return key in self.cache
 
     def clear(self):
+        for key,val in self.file_metadata.items():
+            print(f"fragment: {key}: count: {val['count']} n_frags: {val['n_fragments']}", flush=True)
+        print(len([*self.cache]), flush=True)
         self.cache = {}
         self.settings = get_settings()
         self.CACHE_SIZE = self.settings["cache_size"]
