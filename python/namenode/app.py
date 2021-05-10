@@ -15,9 +15,9 @@ import dedup as dedup
 import gen_dedup as gen_dedup
 import full_file as full_file
 import coded as coded
-import logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+# import logging
+# log = logging.getLogger('werkzeug')
+# log.setLevel(logging.ERROR)
 
 BLOCK_SIZE = 1024
 

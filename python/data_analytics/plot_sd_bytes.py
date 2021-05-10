@@ -21,7 +21,7 @@ def get_ratio(scenario, cache_size, n_file, type, sdf, sdb, file):
 
     occurences = {}
 
-    entries = entries[5000:] if scenario == "ScenarioGEN_DEDUP" or scenario == "ScenarioDEDUP" else entries[500:]
+    entries = entries[500:] if scenario == "ScenarioFULL_FILE" else entries[5000:]
 
     print(len(entries))
 
@@ -33,17 +33,17 @@ def get_ratio(scenario, cache_size, n_file, type, sdf, sdb, file):
     
     in_cache_values = sum(list(map(lambda x: int(x["inCache"]), entries)))
 
-    x = 6000 if scenario == "ScenarioGEN_DEDUP" or scenario == "ScenarioDEDUP" else 600
+    x = 600 if scenario == "ScenarioFULL_FILE" else 6000
     cache_ratio = in_cache_values / x
 
     return cache_ratio
 
 
-types = ["IMPROVED_LFU"]
-sdbs = ["5", "10", "20", "40", "60", "80", "120"]
-sdf = "100"
-scenarios = ["ScenarioDEDUP", "ScenarioGEN_DEDUP", "ScenarioFULL_FILE"]
-cache_sizes = ["800"]
+types = ["GEN_DEDUP"]
+sdbs = ["1250", "1750", "2500", "3750", "5000"]
+sdf = "200"
+scenarios = ["ScenarioGEN_DEDUP"]
+cache_sizes = ["1000"]
 n_files = "1000"
 file = "cache_hits"
 
@@ -52,7 +52,7 @@ cache_ratio = {}
 for scenario in scenarios:
     for t in types:
         for sdb in sdbs:
-            size = "800" if scenario == "ScenarioGEN_DEDUP" or scenario == "ScenarioDEDUP" else "80"
+            size = "100" if scenario == "ScenarioFULL_FILE" else "1000"
             ratio = get_ratio(scenario, size, n_files, t, sdf, sdb, file)
             cache_ratio[int(sdb)] = ratio
     lists = sorted(cache_ratio.items())
@@ -61,6 +61,7 @@ for scenario in scenarios:
     p.set_label(scenario)
     plt.legend()
 
+plt.ylim(0,1)
 plt.xlabel("Bytes standard deviation")
 plt.ylabel("Cache utilization ratio")
 plt.title("SD Bytes")

@@ -6,7 +6,7 @@ class TimeCache:
     settings = get_settings()
     CACHE_SIZE = settings["cache_size"]
 
-    cache = ExpiringDict(max_len=CACHE_SIZE, max_age_seconds=10)
+    cache = ExpiringDict(max_len=CACHE_SIZE, max_age_seconds=60)
 
     def add_to_cache(self, key, value):
         self.cache[key] = value
@@ -23,5 +23,5 @@ class TimeCache:
     def clear(self):
         self.settings = get_settings()
         self.CACHE_SIZE = self.settings["cache_size"]
-        self.cache = ExpiringDict(max_len=self.CACHE_SIZE, max_age_seconds=10)
+        self.cache = ExpiringDict(max_len=self.CACHE_SIZE, max_age_seconds=60)
 

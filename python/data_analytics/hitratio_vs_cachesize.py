@@ -5,8 +5,8 @@ import os
 from collections import OrderedDict
 import dataloader
 
-types = ["IMPROVED_LFU"]
-sdbs = ["5"]
+types = ["TIME"]
+sdbs = ["30"]
 sdfs = ["200"]
 #scenarios = ["ScenarioFULL_FILE"]
 cache_sizes = ["10", "20", "30", "50", "70", "100", "150", "200", "400", "800"]
@@ -27,7 +27,7 @@ file = "cache_hits"
 # plt.plot(x, y)
 # plt.show()
 
-scenarios = ["FULL_FILE", "GEN_DEDUP", "DEDUP", "CODED"]
+scenarios = ["GEN_DEDUP_TIME", "TIME", "DEDUP"]
 for scenario in scenarios:
     cache_ratio = {}
     i = 0
@@ -39,13 +39,11 @@ for scenario in scenarios:
         cache_sizes = ["100", "200", "300", "500", "700", "1000", "1500", "2000"]
 
 
-    types = ["CODED"] if scenario == "CODED" else ["IMPROVED_LFU"]
+    # types = ["CODED"] if scenario == "CODED" else ["IMPROVED_LFU"]
     for occurences, entries in dataloader.load_data(["Scenario" + scenario], cache_sizes, n_files, types, sdfs, sdbs, file):
-        entries = entries[5000:] if scenario == "GEN_DEDUP" or scenario == "DEDUP" or scenario == "CODED" else entries[500:]
+        entries = entries[500:] if scenario == "FULL_FILE" else entries[5000:]
         
         in_cache_values = sum(list(map(lambda x: int(x["inCache"]), entries)))
-        if scenario == "CODED":
-            cache_ratio[int(cache_sizes[i])] = in_cache_values / 5000
         if scenario == "FULL_FILE":
             cache_ratio[int(cache_sizes[i])*10] = in_cache_values / 500
         else:

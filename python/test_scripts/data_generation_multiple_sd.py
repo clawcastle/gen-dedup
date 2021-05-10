@@ -9,12 +9,14 @@ import matplotlib.pyplot as plt
 import settings
 
 ZEROS = bytearray(settings.ZEROS_SIZE)
+max16 = math.pow(2, 16)
+max8 = math.pow(2, 8)
 
 def generate_chunk():
-    values = np.random.normal(128, settings.SD_BYTES, size=settings.CHUNK_SIZE-settings.ZEROS_SIZE)
-    as_bytes = values.astype(np.uint8).tobytes()
+    base = np.random.normal(max16 // 2, settings.SD_BYTES, size=1).astype(np.uint16).tobytes()
+    deviation = np.random.normal(max8 // 2, 30, size=1).astype(np.uint8).tobytes()
 
-    chunk = ZEROS + as_bytes
+    chunk = ZEROS + base + deviation
 
     return chunk
 
@@ -31,12 +33,12 @@ def generate_file(file_name):
 
 print("Sending post requests")
 
-sd_bytes = [5, 10, 20, 40, 60, 80, 120]
+sd_bytes = [1250, 1875, 2500, 3750, 5000]
 
 for sd in sd_bytes:
     settings.SD_BYTES = sd
     for n in file_name_range:
-        file_name = f"GEN_DEDUP_SD{sd}_{n}"
+        file_name = f"DEDUP_SD{sd}_{n}"
         file_data = generate_file(file_name)
         requests.post(f"http://localhost:3000/file_data", files=dict(file=file_data), data=dict(file_name=file_name))
 
