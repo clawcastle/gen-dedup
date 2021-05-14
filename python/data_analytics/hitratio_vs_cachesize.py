@@ -5,12 +5,13 @@ import os
 from collections import OrderedDict
 import dataloader
 
-types = ["TIME"]
-sdbs = ["30"]
-sdfs = ["200"]
+types = ["IMPROVED_LFU", "CODED"]
+sdbs = ["1250"]
+sdfs = ["10", "40", "70", "100", "130", "160", "190", "220", "250"]
 #scenarios = ["ScenarioFULL_FILE"]
-cache_sizes = ["10", "20", "30", "50", "70", "100", "150", "200", "400", "800"]
-n_files = ["500"]
+# cache_sizes = ["100","200","400","600","800","1000","1200","1400","1600","1800","2000"]
+cache_sizes = ["1000"]
+n_files = ["1000"]
 file = "cache_hits"
 
 
@@ -27,33 +28,38 @@ file = "cache_hits"
 # plt.plot(x, y)
 # plt.show()
 
-scenarios = ["GEN_DEDUP_TIME", "TIME", "DEDUP"]
+labels = {"CODED": "Coded", "DEDUP_SdFiles": "Dedup", "GEN_DEDUP_SdFiles": "GenDedup", "FULL_FILE": "Full file"}
+
+scenarios = ["CODED", "FULL_FILE", "DEDUP_SdFiles", "GEN_DEDUP_SdFiles"]
 for scenario in scenarios:
     cache_ratio = {}
     i = 0
     x = []
     y = []
     if scenario == "FULL_FILE":
-        cache_sizes = ["10", "20", "30", "50", "70", "100", "150", "200"]
+        cache_sizes = ["100"]
+        # cache_sizes = ["10","20","40","60","80","100","120","140","160","180","200"]
     else:
-        cache_sizes = ["100", "200", "300", "500", "700", "1000", "1500", "2000"]
+        cache_sizes = ["1000"]
+        # cache_sizes = ["100","200","400","600","800","1000","1200","1400","1600","1800","2000"]
 
 
-    # types = ["CODED"] if scenario == "CODED" else ["IMPROVED_LFU"]
+
+    types = ["CODED"] if scenario == "CODED" else ["IMPROVED_LFU"]
     for occurences, entries in dataloader.load_data(["Scenario" + scenario], cache_sizes, n_files, types, sdfs, sdbs, file):
-        entries = entries[500:] if scenario == "FULL_FILE" else entries[5000:]
+        entries = entries[1000:] if scenario == "FULL_FILE" else entries[10000:]
         
         in_cache_values = sum(list(map(lambda x: int(x["inCache"]), entries)))
         if scenario == "FULL_FILE":
-            cache_ratio[int(cache_sizes[i])*10] = in_cache_values / 500
+            cache_ratio[int(sdfs[i])] = in_cache_values / 2000
         else:
-            cache_ratio[int(cache_sizes[i])] = in_cache_values / 5000
+            cache_ratio[int(sdfs[i])] = in_cache_values / 20000
         i = i + 1
 
     lists = sorted(cache_ratio.items())
     x, y = zip(*lists)
-    plt.plot(x, y, label=scenario)
-plt.xlabel("Cache size")
+    plt.plot(x, y, label=labels[scenario])
+plt.xlabel("SD Files")
 plt.ylabel("Cache utilization ratio")
 plt.title("Cache utilization ratios")
 plt.legend(loc="upper right")

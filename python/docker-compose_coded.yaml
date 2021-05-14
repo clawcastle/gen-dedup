@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  namenode_coded:
+    build: ./namenode
+    container_name: namenode_coded
+    environment:
+      - NODE_ID=namenode_coded
+      - PORT_NO=3400
+      - STRATEGY=CODED # FULL_FILE | CODED | DEDUP | GEN_coded
+      - CACHE_STRATEGY=CODED # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU | CODED
+      - CACHE_SIZE=1000
+      - MEASUREMENT_MODE=1
+      - BLOCK_SIZE=11
+      - BASE_SIZE=10
+    volumes:
+      - ./data/namenode_coded:/app/data
+      - ./db:/app/db
+      - ./data_analytics/measurements:/app/measurements
+    ports:
+      - 3400:3400
+  storagenode_coded_1:
+    build: ./storagenode
+    container_name: storagenode_coded_1
+    environment:
+      - NODE_ID=storagenode_coded_1
+      - PORT_NO=3401
+    volumes:
+      - ./data/storagenode_coded_1:/app/data
+    ports:
+      - 3401:3401
+  storagenode_coded_2:
+    build: ./storagenode
+    container_name: storagenode_coded_2
+    environment:
+      - NODE_ID=storagenode_coded_2
+      - PORT_NO=3402
+    volumes:
+      - ./data/storagenode_coded_2:/app/data
+    ports:
+      - 3402:3402
+  storagenode_coded_3:
+    build: ./storagenode
+    container_name: storagenode_coded_3
+    environment:
+      - NODE_ID=storagenode_coded_3
+      - PORT_NO=3403
+    volumes:
+      - ./data/storagenode_coded_3:/app/data
+    ports:
+      - 3403:3403
+  storagenode_coded_4:
+    build: ./storagenode
+    container_name: storagenode_coded_4
+    environment:
+      - NODE_ID=storagenode_coded_4
+      - PORT_NO=3404
+    volumes:
+      - ./data/storagenode_coded_4:/app/data
+    ports:
+      - 3404:3404

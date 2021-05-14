@@ -39,10 +39,10 @@ def get_ratio(scenario, cache_size, n_file, type, sdf, sdb, file):
     return cache_ratio
 
 
-types = ["GEN_DEDUP"]
-sdbs = ["1250", "1750", "2500", "3750", "5000"]
-sdf = "200"
-scenarios = ["ScenarioGEN_DEDUP"]
+types = ["IMPROVED_LFU"]
+sdbs = ["1250", "1875", "2500", "3750", "5000"]
+sdf = "75"
+scenarios = ["ScenarioGEN_DEDUP", "ScenarioDEDUP"]
 cache_sizes = ["1000"]
 n_files = "1000"
 file = "cache_hits"
@@ -61,7 +61,7 @@ for scenario in scenarios:
     p.set_label(scenario)
     plt.legend()
 
-plt.ylim(0,1)
+# plt.ylim(0,1)
 plt.xlabel("Bytes standard deviation")
 plt.ylabel("Cache utilization ratio")
 plt.title("SD Bytes")

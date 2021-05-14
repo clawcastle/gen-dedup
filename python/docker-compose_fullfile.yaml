@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  namenode_fullfile:
+    build: ./namenode
+    container_name: namenode_fullfile
+    environment:
+      - NODE_ID=namenode_fullfile
+      - PORT_NO=3200
+      - STRATEGY=FULL_FILE # FULL_FILE | CODED | DEDUP | GEN_DEDUP
+      - CACHE_STRATEGY=IMPROVED_LFU # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU | CODED
+      - CACHE_SIZE=1000
+      - MEASUREMENT_MODE=1
+      - BLOCK_SIZE=11
+      - BASE_SIZE=10
+    volumes:
+      - ./data/namenode_fullfile:/app/data
+      - ./db:/app/db
+      - ./data_analytics/measurements:/app/measurements
+    ports:
+      - 3200:3200
+  storagenode_fullfile_1:
+    build: ./storagenode
+    container_name: storagenode_fullfile_1
+    environment:
+      - NODE_ID=storagenode_fullfile_1
+      - PORT_NO=3201
+    volumes:
+      - ./data/storagenode_fullfile_1:/app/data
+    ports:
+      - 3201:3201
+  storagenode_fullfile_2:
+    build: ./storagenode
+    container_name: storagenode_fullfile_2
+    environment:
+      - NODE_ID=storagenode_fullfile_2
+      - PORT_NO=3202
+    volumes:
+      - ./data/storagenode_fullfile_2:/app/data
+    ports:
+      - 3202:3202
+  storagenode_fullfile_3:
+    build: ./storagenode
+    container_name: storagenode_fullfile_3
+    environment:
+      - NODE_ID=storagenode_fullfile_3
+      - PORT_NO=3203
+    volumes:
+      - ./data/storagenode_fullfile_3:/app/data
+    ports:
+      - 3203:3203
+  storagenode_fullfile_4:
+    build: ./storagenode
+    container_name: storagenode_fullfile_4
+    environment:
+      - NODE_ID=storagenode_fullfile_4
+      - PORT_NO=3204
+    volumes:
+      - ./data/storagenode_fullfile_4:/app/data
+    ports:
+      - 3204:3204

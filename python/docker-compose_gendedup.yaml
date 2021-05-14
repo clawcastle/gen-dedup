@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  namenode_gendedup:
+    build: ./namenode
+    container_name: namenode_gendedup
+    environment:
+      - NODE_ID=namenode_gendedup
+      - PORT_NO=3100
+      - STRATEGY=GEN_DEDUP # FULL_FILE | CODED | DEDUP | GEN_DEDUP
+      - CACHE_STRATEGY=IMPROVED_LFU # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU | CODED
+      - CACHE_SIZE=1000
+      - MEASUREMENT_MODE=1
+      - BLOCK_SIZE=11
+      - BASE_SIZE=10
+    volumes:
+      - ./data/namenode_gendedup:/app/data
+      - ./db:/app/db
+      - ./data_analytics/measurements:/app/measurements
+    ports:
+      - 3100:3100
+  storagenode_gendedup_1:
+    build: ./storagenode
+    container_name: storagenode_gendedup_1
+    environment:
+      - NODE_ID=storagenode_gendedup_1
+      - PORT_NO=3101
+    volumes:
+      - ./data/storagenode_gendedup_1:/app/data
+    ports:
+      - 3101:3101
+  storagenode_gendedup_2:
+    build: ./storagenode
+    container_name: storagenode_gendedup_2
+    environment:
+      - NODE_ID=storagenode_gendedup_2
+      - PORT_NO=3102
+    volumes:
+      - ./data/storagenode_gendedup_2:/app/data
+    ports:
+      - 3102:3102
+  storagenode_gendedup_3:
+    build: ./storagenode
+    container_name: storagenode_gendedup_3
+    environment:
+      - NODE_ID=storagenode_gendedup_3
+      - PORT_NO=3103
+    volumes:
+      - ./data/storagenode_gendedup_3:/app/data
+    ports:
+      - 3103:3103
+  storagenode_gendedup_4:
+    build: ./storagenode
+    container_name: storagenode_gendedup_4
+    environment:
+      - NODE_ID=storagenode_gendedup_4
+      - PORT_NO=3104
+    volumes:
+      - ./data/storagenode_gendedup_4:/app/data
+    ports:
+      - 3104:3104

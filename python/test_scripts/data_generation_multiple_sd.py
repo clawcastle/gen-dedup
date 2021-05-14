@@ -38,7 +38,7 @@ sd_bytes = [1250, 1875, 2500, 3750, 5000]
 for sd in sd_bytes:
     settings.SD_BYTES = sd
     for n in file_name_range:
-        file_name = f"DEDUP_SD{sd}_{n}"
+        file_name = f"GEN_DEDUP_SD{sd}_{n}"
         file_data = generate_file(file_name)
         requests.post(f"http://localhost:3000/file_data", files=dict(file=file_data), data=dict(file_name=file_name))
 

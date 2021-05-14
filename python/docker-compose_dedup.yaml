@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  namenode_dedup:
+    build: ./namenode
+    container_name: namenode_dedup
+    environment:
+      - NODE_ID=namenode_dedup
+      - PORT_NO=3300
+      - STRATEGY=DEDUP # FULL_FILE | CODED | DEDUP | GEN_DEDUP
+      - CACHE_STRATEGY=IMPROVED_LFU # SIMPLE | FIFO | TIME | LFU | IMPROVED_LFU | CODED
+      - CACHE_SIZE=1000
+      - MEASUREMENT_MODE=1
+      - BLOCK_SIZE=11
+      - BASE_SIZE=10
+    volumes:
+      - ./data/namenode_dedup:/app/data
+      - ./db:/app/db
+      - ./data_analytics/measurements:/app/measurements
+    ports:
+      - 3300:3300
+  storagenode_dedup_1:
+    build: ./storagenode
+    container_name: storagenode_dedup_1
+    environment:
+      - NODE_ID=storagenode_dedup_1
+      - PORT_NO=3301
+    volumes:
+      - ./data/storagenode_dedup_1:/app/data
+    ports:
+      - 3301:3301
+  storagenode_dedup_2:
+    build: ./storagenode
+    container_name: storagenode_dedup_2
+    environment:
+      - NODE_ID=storagenode_dedup_2
+      - PORT_NO=3302
+    volumes:
+      - ./data/storagenode_dedup_2:/app/data
+    ports:
+      - 3302:3302
+  storagenode_dedup_3:
+    build: ./storagenode
+    container_name: storagenode_dedup_3
+    environment:
+      - NODE_ID=storagenode_dedup_3
+      - PORT_NO=3303
+    volumes:
+      - ./data/storagenode_dedup_3:/app/data
+    ports:
+      - 3303:3303
+  storagenode_dedup_4:
+    build: ./storagenode
+    container_name: storagenode_dedup_4
+    environment:
+      - NODE_ID=storagenode_dedup_4
+      - PORT_NO=3304
+    volumes:
+      - ./data/storagenode_dedup_4:/app/data
+    ports:
+      - 3304:3304
